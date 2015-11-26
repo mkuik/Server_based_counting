@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Server based counting</string>
+    <string name="title_activity_define_server">Search network</string>
+    <string name="Add_custom_server_button">Add server</string>
 </resources>
