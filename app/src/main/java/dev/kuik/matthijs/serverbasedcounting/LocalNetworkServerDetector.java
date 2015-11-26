@@ -23,7 +23,7 @@ public class LocalNetworkServerDetector implements Runnable {
     static final int timeout = 30;
     static final int threads = 10;
     static final int[] ip_range = {0, 256};
-    static final int[] port_range = {0, 200};
+    static final int[] port_range = {0, 65536};
 
     private static boolean stopThread = false;
     private static long test_count = 0;
