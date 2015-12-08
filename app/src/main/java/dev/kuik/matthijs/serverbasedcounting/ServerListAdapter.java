@@ -1,13 +1,17 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
@@ -16,8 +20,10 @@ import java.util.Comparator;
  */
 public class ServerListAdapter extends BaseAdapter {
 
+    static final String tag = "ServerListAdapter";
     ArrayList<ServerAddress> serverAddressItems;
     Context context;
+    private OnClickListener adapter;
 
     public ServerListAdapter() {
         serverAddressItems = new ArrayList<>();
@@ -27,14 +33,26 @@ public class ServerListAdapter extends BaseAdapter {
         this.context = context;
     }
 
-    public void addServerAddress(final String ip, final int port) {
-        for (ServerAddress address : serverAddressItems) {
-            if (address.ip.compareTo(ip) == 0 && address.port == port) {
+    public interface OnClickListener {
+        void onClick(int position);
+    }
+
+    public void setOnClickListener(OnClickListener adapter) {
+        this.adapter = adapter;
+    }
+
+    public void add(final ServerAddress address) {
+        for (ServerAddress listItem : serverAddressItems) {
+            if (listItem.equals(address)) {
                 return;
             }
         }
-        serverAddressItems.add(new ServerAddress(ip, port));
+        serverAddressItems.add(address);
         Collections.sort(serverAddressItems, new SortByIP());
+    }
+
+    public void clear() {
+        serverAddressItems.clear();
     }
 
     @Override
@@ -53,7 +71,7 @@ public class ServerListAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         View view = convertView;
         ServerAddressViewHolder viewHolder;
 
@@ -63,38 +81,29 @@ public class ServerListAdapter extends BaseAdapter {
             view = li.inflate(R.layout.server_address_list_item, null);
             viewHolder = new ServerAddressViewHolder(view);
             view.setTag(viewHolder);
+
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (adapter != null) adapter.onClick(position);
+                }
+            });
         } else {
             viewHolder = (ServerAddressViewHolder) view.getTag();
         }
 
         ServerAddress item = (ServerAddress) getItem(position);
-        viewHolder.ip.setText(item.ip);
-        viewHolder.port.setText(Integer.toString(item.port));
+        viewHolder.ip.setText(item.getHost());
+        viewHolder.port.setText(item.getPort());
 
         return view;
 
     }
 
-    public class ServerAddress {
-        public String ip;
-        public int port;
-
-        ServerAddress(final String ip, final int port) {
-            this.ip = ip;
-            this.port = port;
-        }
-    }
-
     public class SortByIP implements Comparator<ServerAddress> {
-
         @Override
         public int compare(ServerAddress lhs, ServerAddress rhs) {
-            final int ip = lhs.ip.compareTo(rhs.ip);
-            if (ip == 0) {
-                return lhs.port - rhs.port;
-            } else {
-                return ip;
-            }
+            return lhs.ip.compareTo(rhs.ip);
         }
     }
 

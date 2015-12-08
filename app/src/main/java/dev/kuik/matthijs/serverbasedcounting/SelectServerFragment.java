@@ -2,13 +2,13 @@ package dev.kuik.matthijs.serverbasedcounting;
 
 import android.app.Activity;
 import android.content.Context;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
-import android.text.format.Formatter;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,104 +17,87 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
+public class SelectServerFragment extends Fragment
+        implements LocalNetworkServerDetector.Adapter, ServerListAdapter.OnClickListener,
+        SwipeRefreshLayout.OnRefreshListener {
 
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-public class SelectServerFragment extends Fragment implements LocalNetworkServerDetector.Adapter {
-
-    private static TextView hostConnection;
-    private static TextView hostPortConnection;
-    private static TextView message;
-
-    private static ProgressBar progressBar;
+    private static final String tag = "SelectServerFragment";
     private static ListView serversListView;
-    private static ServerListAdapter servers;
+    private static TextView message;
+    public static final ServerListAdapter servers = new ServerListAdapter();
     private static Button startScanningNetwork;
     private static LocalNetworkServerDetector scanner;
     private static Handler handler;
+    private OnSelectedSocket listener;
+    private static SwipeRefreshLayout swipeLayout;
 
     private static Context context;
 
     public SelectServerFragment() {
-        scanner = new LocalNetworkServerDetector(this);
         handler = new Handler(Looper.getMainLooper());
-        servers = new ServerListAdapter();
+        servers.setOnClickListener(this);
     }
 
-    public void scanNetwork() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final WifiManager wifiMgr = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
-                final int ip = wifiMgr.getConnectionInfo().getIpAddress();
-                final String ipBase = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
-                final String ipFull = String.format("%d.%d.%d.%d", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 24 & 0xff));
-                scanner.setIPDomain(ipBase);
-                Thread scannerThread = new Thread(scanner);
-                scannerThread.start();
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        message.setText(ipFull);
-                    }
-                });
-            }
-        });
-        thread.start();
+    public int getIP() {
+        final WifiManager wifiMgr = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
+        return wifiMgr.getConnectionInfo().getIpAddress();
     }
 
     @Override
-    public void foundOpenPort(final String ip, final int port) {
-        servers.addServerAddress(ip, port);
+    public void onResume() {
+        super.onResume();
+        View view;
+        if ((view = getView()) != null) {
+            swipeLayout.measure(view.getWidth(), view.getHeight());
+        }
+        scanNetwork();
+    }
+
+    public void scanNetwork() {
+        if (scanner == null) {
+            swipeLayout.setRefreshing(true);
+            Log.i(tag, "scan network");
+            servers.clear();
+            servers.notifyDataSetChanged();
+            final int ip = getIP();
+            final String ipBase = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
+            scanner = new LocalNetworkServerDetector(this, ipBase) {
+                @Override
+                protected void onPostExecute(String s) {
+                    super.onPostExecute(s);
+                    swipeLayout.setRefreshing(false);
+                    scanner = null;
+                    message.setText("");
+                }
+
+                @Override
+                protected void onProgressUpdate(String... values) {
+                    super.onProgressUpdate(values);
+                    Log.i(tag, values[0]);
+                    message.setText(values[0]);
+                }
+            };
+            scanner.execute("");
+        } else {
+            Log.i(tag, "scan network function is busy");
+        }
+    }
+
+    @Override
+    public void foundOpenPort(final ServerAddress address) {
+        servers.add(address);
         handler.post(new Runnable() {
             public void run() {
                 servers.notifyDataSetChanged();
             }
         });
+        listener.onCreateServerAddress(address);
+        Log.i(address.getHost(), "connected to port " + address.getPort());
     }
 
     @Override
-    public void OnProgressUpdate(final double percentage) {
-        final int progress = (int) (percentage * progressBar.getMax());
-        handler.post(new Runnable() {
-            public void run() {
-                progressBar.setProgress(progress);
-            }
-        });
-    }
-
-    @Override
-    public void OnIPError(final String message) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                hostConnection.setText(message);
-            }
-        });
-    }
-
-    @Override
-    public void OnPortError(final String message) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                hostPortConnection.setText(message);
-            }
-        });
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void OnStatusReport(final String message) {
+        //Log.i("socket test", message);
     }
 
     @Override
@@ -124,20 +107,10 @@ public class SelectServerFragment extends Fragment implements LocalNetworkServer
 
         View view = inflater.inflate(R.layout.fragment_select_server, container, false);
         serversListView = (ListView) view.findViewById(R.id.serverList);
-        startScanningNetwork = (Button) view.findViewById(R.id.startScanButton);
-        progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
-        hostConnection = (TextView) view.findViewById(R.id.status1);
-        hostPortConnection = (TextView) view.findViewById(R.id.status2);
-        message = (TextView) view.findViewById(R.id.status3);
-
+        swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
+        message = (TextView) view.findViewById(R.id.message);
+        swipeLayout.setOnRefreshListener(this);
         serversListView.setAdapter(servers);
-
-        startScanningNetwork.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                scanNetwork();
-            }
-        });
 
         return view;
     }
@@ -147,11 +120,12 @@ public class SelectServerFragment extends Fragment implements LocalNetworkServer
         super.onAttach(activity);
         context = activity;
         servers.setContext(activity);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
+        try {
+            listener = (OnSelectedSocket) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnSelectedSocket");
+        }
     }
 
     @Override
@@ -160,4 +134,20 @@ public class SelectServerFragment extends Fragment implements LocalNetworkServer
         scanner.abort();
     }
 
+    @Override
+    public void onClick(int position) {
+        if (listener != null) {
+            listener.onSelectedAddress((ServerAddress)servers.getItem(position));
+        }
+    }
+
+    @Override
+    public void onRefresh() {
+        scanNetwork();
+    }
+
+    public interface OnSelectedSocket {
+        void onSelectedAddress(ServerAddress address);
+        void onCreateServerAddress(ServerAddress address);
+    }
 }
