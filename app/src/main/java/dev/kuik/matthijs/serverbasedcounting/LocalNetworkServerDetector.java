@@ -51,6 +51,7 @@ public class LocalNetworkServerDetector extends AsyncTask<String, String, String
         try {
             es.awaitTermination(15, TimeUnit.SECONDS);
         } catch (InterruptedException ignored) {
+            publishProgress(ignored.toString());
         }
         return null;
     }

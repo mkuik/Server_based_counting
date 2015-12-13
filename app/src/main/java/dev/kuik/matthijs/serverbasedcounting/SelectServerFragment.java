@@ -26,7 +26,7 @@ public class SelectServerFragment extends Fragment
     private static TextView message;
     public static final ServerListAdapter servers = new ServerListAdapter();
     private static Button startScanningNetwork;
-    private static LocalNetworkServerDetector scanner;
+    private LocalNetworkServerDetector scanner;
     private static Handler handler;
     private OnSelectedSocket listener;
     private static SwipeRefreshLayout swipeLayout;
@@ -36,6 +36,17 @@ public class SelectServerFragment extends Fragment
     public SelectServerFragment() {
         handler = new Handler(Looper.getMainLooper());
         servers.setOnClickListener(this);
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
     }
 
     public int getIP() {
@@ -50,37 +61,47 @@ public class SelectServerFragment extends Fragment
         if ((view = getView()) != null) {
             swipeLayout.measure(view.getWidth(), view.getHeight());
         }
-        scanNetwork();
     }
 
     public void scanNetwork() {
-        if (scanner == null) {
-            swipeLayout.setRefreshing(true);
-            Log.i(tag, "scan network");
-            servers.clear();
-            servers.notifyDataSetChanged();
-            final int ip = getIP();
-            final String ipBase = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
-            scanner = new LocalNetworkServerDetector(this, ipBase) {
-                @Override
-                protected void onPostExecute(String s) {
-                    super.onPostExecute(s);
-                    swipeLayout.setRefreshing(false);
-                    scanner = null;
-                    message.setText("");
-                }
-
-                @Override
-                protected void onProgressUpdate(String... values) {
-                    super.onProgressUpdate(values);
-                    Log.i(tag, values[0]);
-                    message.setText(values[0]);
-                }
-            };
-            scanner.execute("");
-        } else {
-            Log.i(tag, "scan network function is busy");
+        if (scanner != null) {
+            scanner.cancel(true);
         }
+        swipeLayout.setRefreshing(true);
+        servers.clear();
+        servers.notifyDataSetChanged();
+        final int ip = getIP();
+        final String ipBase = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
+        scanner = new LocalNetworkServerDetector(this, ipBase) {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                Log.i(tag, "scan network");
+            }
+
+            @Override
+            protected void onCancelled() {
+                super.onCancelled();
+                scanner = null;
+                Log.i(tag, "scan cancelled");
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                Log.i(tag, "scan finished");
+                super.onPostExecute(s);
+                swipeLayout.setRefreshing(false);
+                message.setText("");
+            }
+
+            @Override
+            protected void onProgressUpdate(String... values) {
+                //Log.i(tag, values[0]);
+                super.onProgressUpdate(values);
+                message.setText(values[0]);
+            }
+        };
+        scanner.execute("");
     }
 
     @Override
@@ -131,13 +152,13 @@ public class SelectServerFragment extends Fragment
     @Override
     public void onDestroy() {
         super.onDestroy();
-        scanner.abort();
+
     }
 
     @Override
     public void onClick(int position) {
         if (listener != null) {
-            listener.onSelectedAddress((ServerAddress)servers.getItem(position));
+            listener.onSelectedAddress((ServerAddress) servers.getItem(position));
         }
     }
 
@@ -148,6 +169,7 @@ public class SelectServerFragment extends Fragment
 
     public interface OnSelectedSocket {
         void onSelectedAddress(ServerAddress address);
+
         void onCreateServerAddress(ServerAddress address);
     }
 }

@@ -6,6 +6,7 @@ import android.app.ActionBar;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -80,24 +81,12 @@ public class DefineServerActivity extends ActionBarActivity
     public void onSelectedAddress(ServerAddress address) {
         Log.i(tag, address.getHost());
         server = address;
-        ServerCommunicator net = new ServerCommunicator(address) {
-            @Override
-            protected void onPostExecute(String s) {
-                if (s != null) {
-                    Log.i(tag, s);
-                    Toast t = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
-                    t.show();
-                }
-            }
-        };
-        try {
-            JSONObject json = new JSONObject();
-            json.put("subtotal", 5);
-            json.put("cient", getUsername());
-            net.execute(json.toString());
-        } catch (JSONException e) {
-            Log.e(tag, e.toString());
-        }
+
+        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("ip", server.ip);
+        editor.putInt("port", server.port);
+        editor.commit();
     }
 
     @Override
