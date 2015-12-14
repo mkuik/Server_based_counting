@@ -4,7 +4,6 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -54,11 +53,11 @@ public class CounterFragment extends Fragment {
         this.subtotal.setText(subtotal.toString());
         if (ip.compareTo("") != 0) {
             server = new ServerAddress(ip, port);
-            testServerConnection();
+            refreshServerStatus();
         }
     }
 
-    public void testServerConnection() {
+    public void refreshServerStatus() {
         if (server != null) {
             ServerCommunicator net = new ServerCommunicator(server) {
                 @Override
@@ -74,22 +73,21 @@ public class CounterFragment extends Fragment {
                         message.setText(String.format("No response from %s", server.getHost()));
                         return;
                     }
-
                     try {
                         JSONObject json = new JSONObject(serverResponse);
-                        final String serverName = json.getString("server_name");
+                        final String serverName = json.getString("hostname");
                         final Integer count = json.getInt("count");
                         message.setText(String.format("Connected to %s", serverName));
                         counter.setText(count.toString());
                     } catch (JSONException e) {
-                        message.setText(String.format("json error %s", serverResponse));
+                        message.setText(String.format("json error %s (%s)", e.toString(), serverResponse));
                     }
                 }
             };
             JSONObject json = new JSONObject();
             try {
                 json.put("user", getUsername());
-                json.put("function", "getname");
+                json.put("function", "status");
             } catch (JSONException e) {
                 message.setText(e.toString());
             }

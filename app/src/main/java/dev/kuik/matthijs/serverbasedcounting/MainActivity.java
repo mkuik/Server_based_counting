@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class MainActivity extends FragmentActivity
-        implements SelectServerFragment.Adapter, CounterFragment.Adapter
+        implements SelectServerFragment.Adapter, CounterFragment.Adapter, AdminFragment.Adapter
 {
     // When requested, this adapter returns a DemoObjectFragment,
     // representing an object in the collection.

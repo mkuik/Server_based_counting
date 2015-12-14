@@ -21,6 +21,9 @@ public class DemoCollectionPagerAdapter extends FragmentStatePagerAdapter {
             case 1:
                 fragment = new CounterFragment();
                 break;
+            case 3:
+                fragment = new AdminFragment();
+                break;
             default:
                 fragment = new ErrorFragment();
                 break;
@@ -30,7 +33,7 @@ public class DemoCollectionPagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public int getCount() {
-        return 3;
+        return 4;
     }
 
     @Override
@@ -45,6 +48,9 @@ public class DemoCollectionPagerAdapter extends FragmentStatePagerAdapter {
                 break;
             case 2:
                 title = "Settings";
+                break;
+            case 3:
+                title = "Admin";
                 break;
             default:
                 title = "null";
