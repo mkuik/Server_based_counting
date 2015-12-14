@@ -25,7 +25,8 @@ public class LocalNetworkServerDetector extends AsyncTask<String, String, String
     static String baseIP;
     static InetAddress address;
 
-    static final int timeout = 1000;
+    private final String tag = "Server locate";
+    static final int timeout = 500;
     static int threads = 1;
     static final int thread_scale = 3;
     static final int[] ip_range = {0, 256};
@@ -49,9 +50,11 @@ public class LocalNetworkServerDetector extends AsyncTask<String, String, String
         }
         es.shutdown();
         try {
-            es.awaitTermination(15, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {
-            publishProgress(ignored.toString());
+            while (!es.isTerminated()) {
+                Thread.sleep(100);
+            }
+        } catch (InterruptedException e) {
+            Log.e(tag, e.toString());
         }
         return null;
     }
@@ -70,14 +73,6 @@ public class LocalNetworkServerDetector extends AsyncTask<String, String, String
                 }
             }
         });
-    }
-
-    public void abort() {
-        stopThread = true;
-        if (es != null) {
-            while (!es.isTerminated()) {
-            }
-        }
     }
 
     public void connect(final String ip, final int port) throws IOException {

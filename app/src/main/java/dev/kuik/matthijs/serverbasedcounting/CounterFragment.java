@@ -1,5 +1,7 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +13,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -45,8 +53,67 @@ public class CounterFragment extends Fragment {
         this.counter.setText(counter.toString());
         this.subtotal.setText(subtotal.toString());
         if (ip.compareTo("") != 0) {
-          server = new ServerAddress(ip, port);
+            server = new ServerAddress(ip, port);
+            testServerConnection();
         }
+    }
+
+    public void testServerConnection() {
+        if (server != null) {
+            ServerCommunicator net = new ServerCommunicator(server) {
+                @Override
+                protected void onPreExecute() {
+                    super.onPreExecute();
+                    message.setText("testing connection...");
+                }
+
+                @Override
+                protected void onPostExecute(final String serverResponse) {
+                    super.onPostExecute(serverResponse);
+                    if (serverResponse == null) {
+                        message.setText(String.format("No response from %s", server.getHost()));
+                        return;
+                    }
+
+                    try {
+                        JSONObject json = new JSONObject(serverResponse);
+                        final String serverName = json.getString("server_name");
+                        final Integer count = json.getInt("count");
+                        message.setText(String.format("Connected to %s", serverName));
+                        counter.setText(count.toString());
+                    } catch (JSONException e) {
+                        message.setText(String.format("json error %s", serverResponse));
+                    }
+                }
+            };
+            JSONObject json = new JSONObject();
+            try {
+                json.put("user", getUsername());
+                json.put("function", "getname");
+            } catch (JSONException e) {
+                message.setText(e.toString());
+            }
+            net.execute(json.toString());
+        }
+    }
+
+    public String getUsername() {
+        AccountManager manager = AccountManager.get(activity);
+        Account[] accounts = manager.getAccountsByType("com.google");
+        List<String> possibleEmails = new LinkedList<String>();
+
+        for (Account account : accounts) {
+            possibleEmails.add(account.name);
+        }
+
+        if (!possibleEmails.isEmpty() && possibleEmails.get(0) != null) {
+            String email = possibleEmails.get(0);
+            String[] parts = email.split("@");
+
+            if (parts.length > 1)
+                return parts[0];
+        }
+        return null;
     }
 
     public void setPreferences() {
@@ -108,6 +175,17 @@ public class CounterFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement Adapter");
         }
+
+
+        activity.getPreferences(Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(
+                new SharedPreferences.OnSharedPreferenceChangeListener() {
+                    @Override
+                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                        if (key.compareTo("ip") == 0) {
+                            getPreferences();
+                        }
+                    }
+                });
     }
 
     @Override

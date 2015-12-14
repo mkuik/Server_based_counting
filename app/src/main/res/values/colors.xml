@@ -3,4 +3,9 @@
     <color name="dark">#bbb</color>
     <color name="progress_bar">#575</color>
     <color name="progress_bar_background">#ccc</color>
+    <color name="server_ok">#3200ff00</color>
+    <color name="server_waring">#32ffbb00</color>
+    <color name="server_error">#32ff0000</color>
+    <color name="header_background">#1a3669</color>
+    <color name="header_text">#ffffff</color>
 </resources>

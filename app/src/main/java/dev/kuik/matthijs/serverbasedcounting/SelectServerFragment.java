@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class SelectServerFragment extends Fragment
@@ -28,7 +27,7 @@ public class SelectServerFragment extends Fragment
     private static Button startScanningNetwork;
     private LocalNetworkServerDetector scanner;
     private static Handler handler;
-    private OnSelectedSocket listener;
+    private Adapter listener;
     private static SwipeRefreshLayout swipeLayout;
 
     private static Context context;
@@ -142,10 +141,10 @@ public class SelectServerFragment extends Fragment
         context = activity;
         servers.setContext(activity);
         try {
-            listener = (OnSelectedSocket) activity;
+            listener = (Adapter) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnSelectedSocket");
+                    + " must implement Adapter");
         }
     }
 
@@ -167,7 +166,7 @@ public class SelectServerFragment extends Fragment
         scanNetwork();
     }
 
-    public interface OnSelectedSocket {
+    public interface Adapter {
         void onSelectedAddress(ServerAddress address);
 
         void onCreateServerAddress(ServerAddress address);

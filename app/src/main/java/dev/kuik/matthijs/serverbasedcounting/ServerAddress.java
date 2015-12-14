@@ -23,7 +23,7 @@ public class ServerAddress {
         try {
             net = InetAddress.getByName(ip);
             name = net.getCanonicalHostName();
-        } catch (UnknownHostException e) {
+        } catch (Exception e) {
             net = null;
         }
     }

@@ -18,6 +18,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
@@ -61,7 +62,8 @@ public class ServerCommunicator extends AsyncTask<String, Integer, String> {
     protected String doInBackground(String... params) {
         String response = null;
         try {
-            socket = new Socket(address.ip, address.port);
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(address.ip, address.port), 3000);
             write(params[0])           ;
             socket.shutdownOutput();
             response = read();
@@ -70,6 +72,14 @@ public class ServerCommunicator extends AsyncTask<String, Integer, String> {
             Log.e(tag, e.toString());
         }
         return response;
+    }
+
+    @Override
+    protected void onPostExecute(final String s) {
+        super.onPostExecute(s);
+        if (s != null) {
+            Log.i(tag, s);
+        }
     }
 }
 

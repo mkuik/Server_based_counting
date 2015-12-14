@@ -35,6 +35,21 @@ public class DemoCollectionPagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        return "OBJECT " + (position + 1);
+        String title;
+        switch(position) {
+            case 0:
+                title = "Servers";
+                break;
+            case 1:
+                title = "Teller";
+                break;
+            case 2:
+                title = "Settings";
+                break;
+            default:
+                title = "null";
+                break;
+        }
+        return title;
     }
 }
