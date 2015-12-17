@@ -15,4 +15,9 @@
         <item name="android:background">#fff</item>
     </style>
 
+    <style name="button" parent="@android:style/Widget.Button">
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:textColor">#fff</item>
+    </style>
+
 </resources>

@@ -6,6 +6,7 @@
     <color name="server_ok">#3200ff00</color>
     <color name="server_waring">#32ffbb00</color>
     <color name="server_error">#32ff0000</color>
-    <color name="header_background">#1a3669</color>
+    <color name="header_background">#000</color>
+    <color name="button_deactivated">@color/dim_foreground_disabled_material_light</color>
     <color name="header_text">#ffffff</color>
 </resources>

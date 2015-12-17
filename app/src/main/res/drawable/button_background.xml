@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="@color/button_deactivated"
+                android:centerColor="@color/button_deactivated"
+                android:endColor="@color/button_deactivated"
+                android:angle="90"/>
+            <padding android:left="7dp"
+                android:top="7dp"
+                android:right="7dp"
+                android:bottom="7dp" />
+            <stroke
+                android:width="2dip"
+                android:color="#0000" />
+            <corners android:radius="@dimen/button_radius" />
+        </shape>
+    </item>
+    <item
+        android:state_pressed="true"
+        android:state_enabled="true">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="@color/header_background"
+                android:centerColor="@color/header_background"
+                android:endColor="@color/header_background"
+                android:angle="90"/>
+            <padding android:left="7dp"
+                android:top="7dp"
+                android:right="7dp"
+                android:bottom="7dp" />
+            <stroke
+                android:width="5dip"
+                android:color="#0000" />
+            <corners android:radius="@dimen/button_radius" />
+        </shape>
+    </item>
+    <item
+        android:state_focused="true"
+        android:state_enabled="true">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="@color/header_background"
+                android:centerColor="@color/header_background"
+                android:endColor="@color/header_background"
+                android:angle="90"/>
+            <padding android:left="7dp"
+                android:top="7dp"
+                android:right="7dp"
+                android:bottom="7dp" />
+            <stroke
+                android:width="5dip"
+                android:color="#0000" />
+            <corners android:radius= "@dimen/button_radius" />
+        </shape>
+    </item>
+    <item
+        android:state_enabled="true">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="@color/header_background"
+                android:centerColor="@color/header_background"
+                android:endColor="@color/header_background"
+                android:angle="90"/>
+            <padding android:left="7dp"
+                android:top="7dp"
+                android:right="7dp"
+                android:bottom="7dp" />
+            <stroke
+                android:width="2dip"
+                android:color="#0000" />
+            <corners android:radius="@dimen/button_radius" />
+        </shape>
+    </item>
+</selector>

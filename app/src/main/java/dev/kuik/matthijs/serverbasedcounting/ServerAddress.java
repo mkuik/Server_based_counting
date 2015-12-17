@@ -17,15 +17,21 @@ public class ServerAddress {
     public Integer port;
     public String name;
 
-    ServerAddress(final String ip, final int port) {
+    ServerAddress(final String ip, final int port, final String name) {
+        this.name = name;
         this.ip = ip;
         this.port = port;
-        try {
-            net = InetAddress.getByName(ip);
-            name = net.getCanonicalHostName();
-        } catch (Exception e) {
-            net = null;
-        }
+    }
+
+    public String toString() {
+        if (name.compareTo("") == 0)
+            return ip + ":" + port.toString();
+        else
+            return name;
+    }
+
+    public void setName(final String name) {
+        this.name = name;
     }
 
     public String getHost() {

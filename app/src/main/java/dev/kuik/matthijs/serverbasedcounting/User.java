@@ -25,6 +25,8 @@ public class User {
         return id;
     }
 
+    public String getName() { return name; }
+
     public boolean isEditor() {
         return edit_rights;
     }

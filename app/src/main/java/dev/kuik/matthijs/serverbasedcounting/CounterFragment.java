@@ -5,8 +5,12 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,20 +31,37 @@ import java.util.List;
  * Use the {@link CounterFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class CounterFragment extends Fragment {
+public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
-    private Adapter mListener;
+    private Adapter listener;
     private Activity activity;
     private TextView message;
     private TextView counter;
     private TextView subtotal;
-    private Button submit;
-    private Button increment;
-    private Button decrement;
+    private Integer submit_number = 0;
+    private Integer max_server_number = 0;
+    private Integer server_number = 0;
+    private Button submitButton;
+    private Button incrementButton;
+    private Button decrementButton;
     private ServerAddress server;
+    private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
+    private static SwipeRefreshLayout swipeLayout;
+    JSONObject json;
+
 
     public CounterFragment() {
         // Required empty public constructor
+        preferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                if (key.compareTo("ip") == 0 || key.compareTo("port") == 0) {
+                    Log.i("IP CHANGED", key);
+                    getPreferences();
+                    refreshServerStatus();
+                }
+            }
+        };
     }
 
     public void getPreferences() {
@@ -49,42 +70,96 @@ public class CounterFragment extends Fragment {
         final Integer subtotal = preferences.getInt("subtotal", 0);
         final String ip = preferences.getString("ip", "");
         final Integer port = preferences.getInt("port", 0);
+        final String hostname = preferences.getString("hostname", "");
+        final Integer max = preferences.getInt("max", 0);
         this.counter.setText(counter.toString());
         this.subtotal.setText(subtotal.toString());
         if (ip.compareTo("") != 0) {
-            server = new ServerAddress(ip, port);
+            server = new ServerAddress(ip, port, hostname);
+        }
+        this.max_server_number = max;
+    }
+
+    public void refreshSubtotal() {
+        if (submit_number < 0)
+            subtotal.setText(submit_number.toString());
+        else
+            subtotal.setText("+" + submit_number.toString());
+    }
+
+    public void increment() {
+        submit_number++;
+        refreshSubtotal();
+        checkCounterRange();
+    }
+
+    public void decrement() {
+        submit_number--;
+        refreshSubtotal();
+        checkCounterRange();
+    }
+
+    public void submit() {
+        json = new JSONObject();
+        try {
+            json.put("subtotal", submit_number);
             refreshServerStatus();
+            submit_number = 0;
+            refreshSubtotal();
+            checkCounterRange();
+        } catch (JSONException e) {
+            message.setText(e.toString());
+        }
+    }
+
+    public void checkCounterRange() {
+        final int sum = server_number + submit_number;
+        decrementButton.setEnabled(sum > 0);
+        incrementButton.setEnabled(sum < Integer.MAX_VALUE);
+        submitButton.setEnabled(submit_number != 0);
+        if (sum > max_server_number && max_server_number != 0) {
+            message.setBackgroundColor(activity.getResources().getColor(R.color.server_error));
+            message.setText("Counter limit reached");
+        } else {
+            message.setBackgroundColor(Color.TRANSPARENT);
+            message.setText("");
         }
     }
 
     public void refreshServerStatus() {
+        if (json == null) json = new JSONObject();
         if (server != null) {
+            swipeLayout.setRefreshing(true);
             ServerCommunicator net = new ServerCommunicator(server) {
                 @Override
                 protected void onPreExecute() {
                     super.onPreExecute();
-                    message.setText("testing connection...");
+                    message.setText("Connecting to server");
                 }
 
                 @Override
                 protected void onPostExecute(final String serverResponse) {
                     super.onPostExecute(serverResponse);
+                    swipeLayout.setRefreshing(false);
                     if (serverResponse == null) {
-                        message.setText(String.format("No response from %s", server.getHost()));
+                        listener.onServerDisconnected(server);
+                        message.setText(String.format("No response from %s", server.toString()));
                         return;
                     }
                     try {
-                        JSONObject json = new JSONObject(serverResponse);
-                        final String serverName = json.getString("hostname");
-                        final Integer count = json.getInt("count");
-                        message.setText(String.format("Connected to %s", serverName));
-                        counter.setText(count.toString());
+                        JSONObject jsonResonse = new JSONObject(serverResponse);
+                        if (listener != null) listener.onServerResponse(server, jsonResonse);
+                        server.setName(jsonResonse.getString("hostname"));
+                        server_number = jsonResonse.getInt("count");
+                        max_server_number = jsonResonse.getInt("max");
+                        message.setText(String.format("Connected to %s", server.toString()));
+                        counter.setText(server_number.toString());
+                        checkCounterRange();
                     } catch (JSONException e) {
                         message.setText(String.format("json error %s (%s)", e.toString(), serverResponse));
                     }
                 }
             };
-            JSONObject json = new JSONObject();
             try {
                 json.put("user", getUsername());
                 json.put("function", "status");
@@ -93,6 +168,7 @@ public class CounterFragment extends Fragment {
             }
             net.execute(json.toString());
         }
+        json = null;
     }
 
     public String getUsername() {
@@ -120,9 +196,11 @@ public class CounterFragment extends Fragment {
         if (server != null) {
             editor.putString("ip", server.ip);
             editor.putInt("port", server.port);
+            editor.putString("hostname", server.name);
         }
         editor.putInt("count", Integer.parseInt(counter.getText().toString()));
         editor.putInt("subtotal", Integer.parseInt(subtotal.getText().toString()));
+        editor.putInt("max", max_server_number);
         editor.commit();
     }
 
@@ -141,6 +219,8 @@ public class CounterFragment extends Fragment {
     public void onResume() {
         super.onResume();
         getPreferences();
+        onRefresh();
+        checkCounterRange();
     }
 
     @Override
@@ -156,10 +236,30 @@ public class CounterFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_counter, container, false);
         counter = (TextView) view.findViewById(R.id.counter);
         subtotal = (TextView) view.findViewById(R.id.subtotal);
-        increment = (Button) view.findViewById(R.id.increment_button);
-        decrement = (Button) view.findViewById(R.id.decrement_button);
-        submit = (Button) view.findViewById(R.id.submit_button);
+        incrementButton = (Button) view.findViewById(R.id.increment_button);
+        decrementButton = (Button) view.findViewById(R.id.decrement_button);
+        submitButton = (Button) view.findViewById(R.id.submit_button);
         message = (TextView) view.findViewById(R.id.message);
+        swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
+        swipeLayout.setOnRefreshListener(this);
+        incrementButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                increment();
+            }
+        });
+        decrementButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                decrement();
+            }
+        });
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                submit();
+            }
+        });
         return view;
     }
 
@@ -168,28 +268,24 @@ public class CounterFragment extends Fragment {
         super.onAttach(context);
         activity = context;
         if (context instanceof Adapter) {
-            mListener = (CounterFragment.Adapter) context;
+            listener = (CounterFragment.Adapter) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement Adapter");
         }
 
-
-        activity.getPreferences(Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(
-                new SharedPreferences.OnSharedPreferenceChangeListener() {
-                    @Override
-                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                        if (key.compareTo("ip") == 0) {
-                            getPreferences();
-                        }
-                    }
-                });
+        activity.getPreferences(Context.MODE_MULTI_PROCESS).registerOnSharedPreferenceChangeListener(preferenceChangeListener);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        listener = null;
+    }
+
+    @Override
+    public void onRefresh() {
+        refreshServerStatus();
     }
 
     /**
@@ -202,7 +298,6 @@ public class CounterFragment extends Fragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface Adapter {
-
+    public interface Adapter extends ServerStatusAdapter {
     }
 }

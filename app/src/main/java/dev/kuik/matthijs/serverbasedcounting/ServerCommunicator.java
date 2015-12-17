@@ -73,13 +73,5 @@ public class ServerCommunicator extends AsyncTask<String, Integer, String> {
         }
         return response;
     }
-
-    @Override
-    protected void onPostExecute(final String s) {
-        super.onPostExecute(s);
-        if (s != null) {
-            Log.i(tag, s);
-        }
-    }
 }
 

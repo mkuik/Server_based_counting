@@ -8,6 +8,9 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -49,6 +52,40 @@ public class ServerListAdapter extends BaseAdapter {
         }
         serverAddressItems.add(address);
         Collections.sort(serverAddressItems, new SortByIP());
+        getHostname(address);
+    }
+
+    public void getHostname(final ServerAddress address) {
+        final JSONObject json = new JSONObject();
+        try {
+            json.put("hostname", "");
+        } catch (JSONException e) {
+            return;
+        }
+        ServerCommunicator server = new ServerCommunicator(address) {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                Log.i(tag, "hostname: " + address.toString());
+            }
+
+            @Override
+            protected void onPostExecute(String response) {
+                Log.i(tag, "hostname: " + response);
+                super.onPostExecute(response);
+                if (response == null) return;
+                try {
+                    JSONObject jsonResponse = new JSONObject(response);
+                    String hostname = jsonResponse.getString("hostname");
+                    Log.i(tag, "hostname: " + hostname);
+                    address.setName(hostname);
+                    notifyDataSetChanged();
+                } catch (JSONException e) {
+                    Log.i(tag, e.toString());
+                }
+            }
+        };
+        server.execute(json.toString());
     }
 
     public void clear() {
@@ -93,9 +130,13 @@ public class ServerListAdapter extends BaseAdapter {
         }
 
         ServerAddress item = (ServerAddress) getItem(position);
-        viewHolder.ip.setText(item.getHost());
-        viewHolder.port.setText(item.getPort());
-
+        if (item.name.compareTo("") != 0) {
+            viewHolder.ip.setText(item.name);
+            viewHolder.port.setText(item.ip + ":" + item.getPort());
+        } else {
+            viewHolder.ip.setText(item.getHost());
+            viewHolder.port.setText(item.getPort());
+        }
         return view;
 
     }

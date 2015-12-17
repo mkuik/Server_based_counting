@@ -1,54 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    style="@style/CatenaThemeWhite"
     tools:context="dev.kuik.matthijs.serverbasedcounting.MainActivity">
 
-    <LinearLayout
-        android:orientation="horizontal"
+    <dev.kuik.matthijs.serverbasedcounting.ThemeBackground
+        android:id="@+id/theme_background"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        style="@style/CatenaThemeBlue"
-        android:gravity="center_horizontal"
-        android:fitsSystemWindows="true">
+        android:layout_height="120dp"
+        android:layout_alignParentStart="false"
+        app:primaryColor="@color/header_background"
+        app:scale="0.0" />
 
-        <ImageView
-            android:layout_marginTop="@dimen/text_margin"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:id="@+id/imageView2"
-            android:src="@mipmap/catena_wit_uncut"
-            android:scaleType="fitCenter"/>
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:focusableInTouchMode="false"
+        android:scaleType="fitCenter"
+        android:layout_marginTop="30dp"/>
 
-    <android.support.v4.view.ViewPager
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        style="@style/CatenaThemeWhite">
+        android:layout_above="@+id/message_scroll_view"
+        android:layout_below="@+id/logo">
 
         <android.support.v4.view.PagerTitleStrip
             android:id="@+id/pager_title_strip"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:layout_gravity="top"
-            android:paddingTop="0dp"
             android:paddingBottom="@dimen/text_margin"
             android:paddingLeft="@dimen/text_margin"
             android:paddingRight="@dimen/text_margin"
-            style="@style/CatenaThemeBlue"/>
+            android:paddingTop="0dp"
+            android:textColor="#fff" />
 
         <!--<android.support.v4.view.PagerTabStrip-->
-            <!--android:id="@+id/pager_header"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_gravity="top"-->
-            <!--android:paddingBottom="4dp"-->
-            <!--android:paddingTop="4dp" />-->
+        <!--android:id="@+id/pager_header"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="top"-->
+        <!--android:paddingBottom="4dp"-->
+        <!--android:paddingTop="4dp" />-->
 
     </android.support.v4.view.ViewPager>
 
-</LinearLayout>
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/message_scroll_view"
+        android:layout_alignParentEnd="false"
+        android:layout_alignParentBottom="true"
+        android:fillViewport="false">
+
+        <TextView
+            android:id="@+id/message"
+            style="@style/CatenaThemeWhite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="false"
+            android:layout_weight="0"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:paddingLeft="@dimen/text_margin"
+            android:paddingTop="@dimen/text_margin"
+            android:paddingRight="@dimen/text_margin"
+            android:paddingBottom="@dimen/text_margin" />
+    </HorizontalScrollView>
+
+</RelativeLayout>

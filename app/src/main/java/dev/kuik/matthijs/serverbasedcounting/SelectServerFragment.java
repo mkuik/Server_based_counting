@@ -16,6 +16,9 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class SelectServerFragment extends Fragment
         implements LocalNetworkServerDetector.Adapter, ServerListAdapter.OnClickListener,
         SwipeRefreshLayout.OnRefreshListener {
@@ -24,8 +27,7 @@ public class SelectServerFragment extends Fragment
     private static ListView serversListView;
     private static TextView message;
     public static final ServerListAdapter servers = new ServerListAdapter();
-    private static Button startScanningNetwork;
-    private LocalNetworkServerDetector scanner;
+    private static LocalNetworkServerDetector scanner;
     private static Handler handler;
     private Adapter listener;
     private static SwipeRefreshLayout swipeLayout;
@@ -60,7 +62,10 @@ public class SelectServerFragment extends Fragment
         if ((view = getView()) != null) {
             swipeLayout.measure(view.getWidth(), view.getHeight());
         }
+        onRefresh();
     }
+
+
 
     public void scanNetwork() {
         if (scanner != null) {
@@ -82,6 +87,7 @@ public class SelectServerFragment extends Fragment
             protected void onCancelled() {
                 super.onCancelled();
                 scanner = null;
+                swipeLayout.setRefreshing(false);
                 Log.i(tag, "scan cancelled");
             }
 
