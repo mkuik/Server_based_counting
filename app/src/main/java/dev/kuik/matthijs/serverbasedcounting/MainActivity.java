@@ -207,6 +207,7 @@ public class MainActivity extends FragmentActivity
                 }
             });
         } else {
+            theme.activate(null);
             Window window = getWindow();
             messageScrollView.setBackgroundColor(color1);
             message.setBackgroundColor(color1);
@@ -222,35 +223,46 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onServerDisconnected(ServerAddress address) {
-        theme.deactivate(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+            theme.deactivate(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
 
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                Window window = getWindow();
-                messageScrollView.setBackgroundColor(Color.BLACK);
-                message.setBackgroundColor(Color.BLACK);
-                message.setTextColor(Color.WHITE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    window.setNavigationBarColor(Color.BLACK);
-                    window.setStatusBarColor(Color.BLACK);
                 }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    Window window = getWindow();
+                    messageScrollView.setBackgroundColor(Color.BLACK);
+                    message.setBackgroundColor(Color.BLACK);
+                    message.setTextColor(Color.WHITE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        window.setNavigationBarColor(Color.BLACK);
+                        window.setStatusBarColor(Color.BLACK);
+                    }
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+        } else {
+            theme.deactivate(null);
+            Window window = getWindow();
+            messageScrollView.setBackgroundColor(Color.BLACK);
+            message.setBackgroundColor(Color.BLACK);
+            message.setTextColor(Color.WHITE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                window.setNavigationBarColor(Color.BLACK);
+                window.setStatusBarColor(Color.BLACK);
             }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        });
-
+        }
     }
 
     @Override

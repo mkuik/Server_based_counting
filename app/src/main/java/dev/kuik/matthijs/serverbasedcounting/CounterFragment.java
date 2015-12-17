@@ -81,10 +81,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     public void refreshSubtotal() {
-        if (submit_number < 0)
-            subtotal.setText(submit_number.toString());
-        else
-            subtotal.setText("+" + submit_number.toString());
+        subtotal.setText(submit_number.toString());
     }
 
     public void increment() {
@@ -142,7 +139,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
                     super.onPostExecute(serverResponse);
                     swipeLayout.setRefreshing(false);
                     if (serverResponse == null) {
-                        listener.onServerDisconnected(server);
+                        if (listener != null) listener.onServerDisconnected(server);
                         message.setText(String.format("No response from %s", server.toString()));
                         return;
                     }

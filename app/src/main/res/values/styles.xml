@@ -2,7 +2,6 @@
 
     <!-- Base application theme. -->
     <style name="CatenaTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:background">@color/header_background</item>
     </style>
 
     <style name="CatenaThemeBlue" parent="CatenaTheme">
