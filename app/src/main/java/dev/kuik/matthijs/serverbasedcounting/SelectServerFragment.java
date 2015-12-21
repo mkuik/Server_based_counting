@@ -12,15 +12,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class SelectServerFragment extends Fragment
-        implements LocalNetworkServerDetector.Adapter, ServerListAdapter.OnClickListener,
+        implements LocalNetworkServerDetector.Adapter,
         SwipeRefreshLayout.OnRefreshListener {
 
     private static final String tag = "SelectServerFragment";
@@ -36,7 +38,6 @@ public class SelectServerFragment extends Fragment
 
     public SelectServerFragment() {
         handler = new Handler(Looper.getMainLooper());
-        servers.setOnClickListener(this);
     }
 
     @Override
@@ -51,7 +52,7 @@ public class SelectServerFragment extends Fragment
     }
 
     public int getIP() {
-        final WifiManager wifiMgr = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
+        final WifiManager wifiMgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         return wifiMgr.getConnectionInfo().getIpAddress();
     }
 
@@ -138,6 +139,16 @@ public class SelectServerFragment extends Fragment
         swipeLayout.setOnRefreshListener(this);
         serversListView.setAdapter(servers);
 
+        serversListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(context, "click " + position + " " +  servers.getItem(position), Toast.LENGTH_SHORT).show();
+                if (listener != null) {
+                    listener.onSelectedAddress((ServerAddress) servers.getItem(position));
+                }
+            }
+        });
+
         return view;
     }
 
@@ -158,13 +169,6 @@ public class SelectServerFragment extends Fragment
     public void onDestroy() {
         super.onDestroy();
 
-    }
-
-    @Override
-    public void onClick(int position) {
-        if (listener != null) {
-            listener.onSelectedAddress((ServerAddress) servers.getItem(position));
-        }
     }
 
     @Override

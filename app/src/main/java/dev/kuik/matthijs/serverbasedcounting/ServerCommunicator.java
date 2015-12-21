@@ -3,6 +3,7 @@ package dev.kuik.matthijs.serverbasedcounting;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Xml;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,7 +39,7 @@ public class ServerCommunicator extends AsyncTask<String, Integer, String> {
     public void write(final String message) throws IOException {
         if (socket != null) {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(socket.getOutputStream());
-            BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
+            BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter, 8192);
             PrintWriter writer = new PrintWriter(bufferedWriter, true);
             writer.println(message);
             writer.flush();
@@ -47,7 +48,7 @@ public class ServerCommunicator extends AsyncTask<String, Integer, String> {
 
     public String read() throws IOException {
         if (socket != null) {
-            BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+            BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"), 8192);
             String str;
             StringBuilder sb = new StringBuilder(8192);
             while ((str = r.readLine()) != null) {
@@ -60,6 +61,7 @@ public class ServerCommunicator extends AsyncTask<String, Integer, String> {
 
     @Override
     protected String doInBackground(String... params) {
+
         String response = null;
         try {
             socket = new Socket();

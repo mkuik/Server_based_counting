@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,9 +60,18 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
                     Log.i("IP CHANGED", key);
                     getPreferences();
                     refreshServerStatus();
+                } else if(key.compareTo("primary_color") == 0) {
+                    setTheme(sharedPreferences.getInt(key, Color.BLACK));
                 }
             }
         };
+    }
+
+    public void setTheme(int color1) {
+        Toast.makeText(getActivity(), "set theme " + color1, Toast.LENGTH_SHORT).show();
+        if (submitButton != null) submitButton.setBackgroundColor(color1);
+        if (incrementButton != null) incrementButton.setBackgroundColor(color1);
+        if (decrementButton != null) decrementButton.setBackgroundColor(color1);
     }
 
     public void getPreferences() {
@@ -72,12 +82,14 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
         final Integer port = preferences.getInt("port", 0);
         final String hostname = preferences.getString("hostname", "");
         final Integer max = preferences.getInt("max", 0);
+        final int color = preferences.getInt("primary_color", Color.BLACK);
         this.counter.setText(counter.toString());
         this.subtotal.setText(subtotal.toString());
         if (ip.compareTo("") != 0) {
             server = new ServerAddress(ip, port, hostname);
         }
         this.max_server_number = max;
+        //setTheme(color);
     }
 
     public void refreshSubtotal() {

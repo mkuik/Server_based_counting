@@ -14,21 +14,16 @@ import android.location.Address;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.CalendarContract;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.PagerTitleStrip;
 import android.support.v4.view.ViewPager;
-import android.transition.TransitionManager;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.view.Window;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,6 +89,7 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onSelectedAddress(final ServerAddress address) {
+        Log.i("serverselect", address.toString());
         SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString("ip", address.ip);
@@ -108,7 +104,8 @@ public class MainActivity extends FragmentActivity
     }
 
     public void getServerTheme(final ServerAddress address) {
-        final JSONObject json = new JSONObject();
+
+        JSONObject json = new JSONObject();
         try {
             json.put("primary_color", "");
             json.put("secondary_color", "");
@@ -154,8 +151,8 @@ public class MainActivity extends FragmentActivity
                         bytes = Base64api7.decode(icon, Base64api7.DEFAULT);
                     }
                     return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                } catch (NullPointerException e) {
-                    Log.e("main", e.toString());
+                } catch (Exception e) {
+                    Log.e("set header icon", e.toString());
                 }
                 return null;
             }
@@ -167,7 +164,7 @@ public class MainActivity extends FragmentActivity
                 setTheme(color1, color2, iconBitmap, true);
             }
         };
-        task.execute("");
+        task.execute("{}");
     }
 
     public void setTheme(final int color1, final int color2, final Bitmap icon, final boolean animate) {
@@ -208,12 +205,12 @@ public class MainActivity extends FragmentActivity
             });
         } else {
             theme.activate(null);
-            Window window = getWindow();
             messageScrollView.setBackgroundColor(color1);
             message.setBackgroundColor(color1);
             message.setTextColor(color2);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 int color = (color1 != Color.WHITE ? color1 : color2);
+                Window window = getWindow();
                 window.setNavigationBarColor(color);
                 window.setStatusBarColor(color);
             }
@@ -254,11 +251,11 @@ public class MainActivity extends FragmentActivity
             });
         } else {
             theme.deactivate(null);
-            Window window = getWindow();
             messageScrollView.setBackgroundColor(Color.BLACK);
             message.setBackgroundColor(Color.BLACK);
             message.setTextColor(Color.WHITE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Window window = getWindow();
                 window.setNavigationBarColor(Color.BLACK);
                 window.setStatusBarColor(Color.BLACK);
             }
@@ -267,12 +264,21 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onServerResponse(ServerAddress address, JSONObject response) {
+
         if (theme.isActive())
             theme.activate(null);
         else
             setTheme(color1, color2, iconBitmap, true);
         String str = response.toString();
+
+        Context context = getApplicationContext();
+        CharSequence text = str.length() + "b from " + address.toString();
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
+
         message.setText(str);
+
         Log.i(address.toString(), str);
     }
 }

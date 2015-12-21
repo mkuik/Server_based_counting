@@ -152,6 +152,9 @@ public class ThemeBackground extends View {
                 setScale(0);
                 invalidate();
             }
+        } else {
+            setScale(0);
+            invalidate();
         }
     }
 

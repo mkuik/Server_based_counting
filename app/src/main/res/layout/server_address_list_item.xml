@@ -14,9 +14,10 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/ip_address"
             android:text="ip address"
-            android:layout_marginBottom="5dp"/>
+            android:layout_marginBottom="0dp"/>
 
         <TextView
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"

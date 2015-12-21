@@ -628,7 +628,7 @@ public class Base64api7 {
                                 ((input[p++] & 0xff) << 8) |
                                 (input[p++] & 0xff);
                         tailLen = 0;
-                    };
+                    }
                     break;
 
                 case 2:

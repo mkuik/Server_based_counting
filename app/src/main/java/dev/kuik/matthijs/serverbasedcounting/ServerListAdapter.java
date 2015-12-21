@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,7 +27,6 @@ public class ServerListAdapter extends BaseAdapter {
     static final String tag = "ServerListAdapter";
     ArrayList<ServerAddress> serverAddressItems;
     Context context;
-    private OnClickListener adapter;
 
     public ServerListAdapter() {
         serverAddressItems = new ArrayList<>();
@@ -34,14 +34,6 @@ public class ServerListAdapter extends BaseAdapter {
 
     public void setContext(Context context) {
         this.context = context;
-    }
-
-    public interface OnClickListener {
-        void onClick(int position);
-    }
-
-    public void setOnClickListener(OnClickListener adapter) {
-        this.adapter = adapter;
     }
 
     public void add(final ServerAddress address) {
@@ -56,36 +48,37 @@ public class ServerListAdapter extends BaseAdapter {
     }
 
     public void getHostname(final ServerAddress address) {
-        final JSONObject json = new JSONObject();
+        JSONObject json = new JSONObject();
         try {
             json.put("hostname", "");
+            ServerCommunicator server = new ServerCommunicator(address) {
+                @Override
+                protected void onPreExecute() {
+                    super.onPreExecute();
+                    Log.i(tag, "get hostname from " + address.toString());
+                }
+
+                @Override
+                protected void onPostExecute(String response) {
+                    Log.i(tag, "hostname response: " + response);
+                    super.onPostExecute(response);
+                    if (response == null) return;
+                    try {
+                        JSONObject jsonResponse = new JSONObject(response);
+                        String hostname = jsonResponse.getString("hostname");
+                        Log.i(tag, "hostname is " + hostname);
+                        address.setName(hostname);
+                        notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        Log.i(tag, e.toString());
+                    }
+                }
+            };
+            server.execute(json.toString());
         } catch (JSONException e) {
+            Log.i(tag, e.toString());
             return;
         }
-        ServerCommunicator server = new ServerCommunicator(address) {
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                Log.i(tag, "hostname: " + address.toString());
-            }
-
-            @Override
-            protected void onPostExecute(String response) {
-                Log.i(tag, "hostname: " + response);
-                super.onPostExecute(response);
-                if (response == null) return;
-                try {
-                    JSONObject jsonResponse = new JSONObject(response);
-                    String hostname = jsonResponse.getString("hostname");
-                    Log.i(tag, "hostname: " + hostname);
-                    address.setName(hostname);
-                    notifyDataSetChanged();
-                } catch (JSONException e) {
-                    Log.i(tag, e.toString());
-                }
-            }
-        };
-        server.execute(json.toString());
     }
 
     public void clear() {
@@ -110,33 +103,15 @@ public class ServerListAdapter extends BaseAdapter {
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         View view = convertView;
-        ServerAddressViewHolder viewHolder;
 
-        if (convertView == null && context != null) {
+        if (view == null && context != null) {
             LayoutInflater li = (LayoutInflater) context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = li.inflate(R.layout.server_address_list_item, null);
-            viewHolder = new ServerAddressViewHolder(view);
-            view.setTag(viewHolder);
-
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (adapter != null) adapter.onClick(position);
-                }
-            });
-        } else {
-            viewHolder = (ServerAddressViewHolder) view.getTag();
         }
-
         ServerAddress item = (ServerAddress) getItem(position);
-        if (item.name.compareTo("") != 0) {
-            viewHolder.ip.setText(item.name);
-            viewHolder.port.setText(item.ip + ":" + item.getPort());
-        } else {
-            viewHolder.ip.setText(item.getHost());
-            viewHolder.port.setText(item.getPort());
-        }
+        TextView ip = (TextView) view.findViewById(R.id.ip_address);
+        if (ip != null) ip.setText(item.toString());
         return view;
 
     }
@@ -145,16 +120,6 @@ public class ServerListAdapter extends BaseAdapter {
         @Override
         public int compare(ServerAddress lhs, ServerAddress rhs) {
             return lhs.ip.compareTo(rhs.ip);
-        }
-    }
-
-    public class ServerAddressViewHolder {
-        public TextView ip;
-        public TextView port;
-
-        ServerAddressViewHolder(View view) {
-            ip = (TextView) view.findViewById(R.id.ip_address);
-            port = (TextView) view.findViewById(R.id.port_number);
         }
     }
 }
