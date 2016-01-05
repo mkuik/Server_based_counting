@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -14,7 +13,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,101 +30,68 @@ import java.util.List;
  * Use the {@link CounterFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, Global.Adapter {
 
     private Adapter listener;
     private Activity activity;
     private TextView message;
     private TextView counter;
     private TextView subtotal;
-    private Integer submit_number = 0;
-    private Integer max_server_number = 0;
-    private Integer server_number = 0;
-    private Button submitButton;
-    private Button incrementButton;
-    private Button decrementButton;
-    private ServerAddress server;
+    private ThemeButton submitButton;
+    private ThemeButton incrementButton;
+    private ThemeButton decrementButton;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
     private static SwipeRefreshLayout swipeLayout;
     JSONObject json;
 
-
     public CounterFragment() {
         // Required empty public constructor
-        preferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                if (key.compareTo("ip") == 0 || key.compareTo("port") == 0) {
-                    Log.i("IP CHANGED", key);
-                    getPreferences();
-                    refreshServerStatus();
-                } else if(key.compareTo("primary_color") == 0) {
-                    setTheme(sharedPreferences.getInt(key, Color.BLACK));
-                }
-            }
-        };
     }
 
-    public void setTheme(int color1) {
-        Toast.makeText(getActivity(), "set theme " + color1, Toast.LENGTH_SHORT).show();
-        if (submitButton != null) submitButton.setBackgroundColor(color1);
-        if (incrementButton != null) incrementButton.setBackgroundColor(color1);
-        if (decrementButton != null) decrementButton.setBackgroundColor(color1);
-    }
-
-    public void getPreferences() {
-        SharedPreferences preferences = activity.getPreferences(Context.MODE_PRIVATE);
-        final Integer counter = preferences.getInt("count", 0);
-        final Integer subtotal = preferences.getInt("subtotal", 0);
-        final String ip = preferences.getString("ip", "");
-        final Integer port = preferences.getInt("port", 0);
-        final String hostname = preferences.getString("hostname", "");
-        final Integer max = preferences.getInt("max", 0);
-        final int color = preferences.getInt("primary_color", Color.BLACK);
-        this.counter.setText(counter.toString());
-        this.subtotal.setText(subtotal.toString());
-        if (ip.compareTo("") != 0) {
-            server = new ServerAddress(ip, port, hostname);
-        }
-        this.max_server_number = max;
-        //setTheme(color);
-    }
-
-    public void refreshSubtotal() {
-        subtotal.setText(submit_number.toString());
+    public void setTheme() {
+        Toast.makeText(getActivity(), "Set theme", Toast.LENGTH_SHORT).show();
+        if (submitButton != null) submitButton.setColor(Global.getColor1());
+        if (incrementButton != null) incrementButton.setColor(Global.getColor1());
+        if (decrementButton != null) decrementButton.setColor(Global.getColor1());
     }
 
     public void increment() {
-        submit_number++;
-        refreshSubtotal();
+        Global.submit_value++;
+        setCounterSubtotal();
         checkCounterRange();
     }
 
     public void decrement() {
-        submit_number--;
-        refreshSubtotal();
+        Global.submit_value--;
+        setCounterSubtotal();
         checkCounterRange();
     }
 
     public void submit() {
-        json = new JSONObject();
-        try {
-            json.put("subtotal", submit_number);
-            refreshServerStatus();
-            submit_number = 0;
-            refreshSubtotal();
-            checkCounterRange();
-        } catch (JSONException e) {
-            message.setText(e.toString());
-        }
+        Global.submit_buffer_value += Global.submit_value;
+        Global.counter_value += Global.submit_value;
+        Global.submit_value = 0;
+        setCounterTotal();
+        setCounterSubtotal();
+        checkCounterRange();
+        refreshServerStatus();
+    }
+
+    public void setCounterTotal() {
+        if (counter != null) counter.setText(Global.counter_value.toString());
+    }
+
+    public void setCounterSubtotal() {
+        if (subtotal != null) subtotal.setText(
+                (Global.submit_value < 0 ? "" : "+") + Global.submit_value.toString());
     }
 
     public void checkCounterRange() {
-        final int sum = server_number + submit_number;
-        decrementButton.setEnabled(sum > 0);
-        incrementButton.setEnabled(sum < Integer.MAX_VALUE);
-        submitButton.setEnabled(submit_number != 0);
-        if (sum > max_server_number && max_server_number != 0) {
+        final int sum = Global.counter_value + Global.submit_value;
+        if (decrementButton != null) decrementButton.setEnabled(sum > 0);
+        if (incrementButton != null) incrementButton.setEnabled(sum < Integer.MAX_VALUE);
+        if (submitButton != null) submitButton.setEnabled(Global.submit_value != 0);
+        if (sum > Global.counter_max_value && Global.counter_max_value != 0) {
             message.setBackgroundColor(activity.getResources().getColor(R.color.server_error));
             message.setText("Counter limit reached");
         } else {
@@ -137,9 +102,9 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     public void refreshServerStatus() {
         if (json == null) json = new JSONObject();
-        if (server != null) {
+        if (Global.getHost() != null) {
             swipeLayout.setRefreshing(true);
-            ServerCommunicator net = new ServerCommunicator(server) {
+            ServerCommunicator net = new ServerCommunicator(Global.getHost()) {
                 @Override
                 protected void onPreExecute() {
                     super.onPreExecute();
@@ -151,18 +116,21 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
                     super.onPostExecute(serverResponse);
                     swipeLayout.setRefreshing(false);
                     if (serverResponse == null) {
-                        if (listener != null) listener.onServerDisconnected(server);
-                        message.setText(String.format("No response from %s", server.toString()));
+                        if (listener != null) listener.onServerDisconnected(Global.getHost());
+                        Global.setIsInSyncWithHost(false);
+                        message.setText(String.format("No response from %s", Global.getHost().toString()));
                         return;
                     }
+                    Global.setHostResponse(serverResponse);
                     try {
                         JSONObject jsonResonse = new JSONObject(serverResponse);
-                        if (listener != null) listener.onServerResponse(server, jsonResonse);
-                        server.setName(jsonResonse.getString("hostname"));
-                        server_number = jsonResonse.getInt("count");
-                        max_server_number = jsonResonse.getInt("max");
-                        message.setText(String.format("Connected to %s", server.toString()));
-                        counter.setText(server_number.toString());
+                        if (listener != null) listener.onServerResponse(Global.getHost(), jsonResonse);
+                        Global.setIsInSyncWithHost(true);
+                        Global.getHost().setName(jsonResonse.getString("hostname"));
+                        Global.setCounterValue(jsonResonse.getInt("count"));
+                        Global.setCounterMaxValue(jsonResonse.getInt("max"));
+                        Global.setSubmitBufferValue(0);
+                        setCounterTotal();
                         checkCounterRange();
                     } catch (JSONException e) {
                         message.setText(String.format("json error %s (%s)", e.toString(), serverResponse));
@@ -172,6 +140,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
             try {
                 json.put("user", getUsername());
                 json.put("function", "status");
+                json.put("subtotal", Global.submit_buffer_value);
             } catch (JSONException e) {
                 message.setText(e.toString());
             }
@@ -199,20 +168,6 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
         return null;
     }
 
-    public void setPreferences() {
-        SharedPreferences preferences = activity.getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        if (server != null) {
-            editor.putString("ip", server.ip);
-            editor.putInt("port", server.port);
-            editor.putString("hostname", server.name);
-        }
-        editor.putInt("count", Integer.parseInt(counter.getText().toString()));
-        editor.putInt("subtotal", Integer.parseInt(subtotal.getText().toString()));
-        editor.putInt("max", max_server_number);
-        editor.commit();
-    }
-
     public static CounterFragment newInstance() {
         CounterFragment fragment = new CounterFragment();
         return fragment;
@@ -227,15 +182,16 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void onResume() {
         super.onResume();
-        getPreferences();
+        Global.addListener(this);
         onRefresh();
         checkCounterRange();
+        setTheme();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        setPreferences();
+        Global.removeListener(this);
     }
 
     @Override
@@ -245,9 +201,9 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
         View view = inflater.inflate(R.layout.fragment_counter, container, false);
         counter = (TextView) view.findViewById(R.id.counter);
         subtotal = (TextView) view.findViewById(R.id.subtotal);
-        incrementButton = (Button) view.findViewById(R.id.increment_button);
-        decrementButton = (Button) view.findViewById(R.id.decrement_button);
-        submitButton = (Button) view.findViewById(R.id.submit_button);
+        incrementButton = (ThemeButton) view.findViewById(R.id.increment_button);
+        decrementButton = (ThemeButton) view.findViewById(R.id.decrement_button);
+        submitButton = (ThemeButton) view.findViewById(R.id.submit_button);
         message = (TextView) view.findViewById(R.id.message);
         swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
         swipeLayout.setOnRefreshListener(this);
@@ -269,6 +225,9 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 submit();
             }
         });
+
+        setCounterTotal();
+        setCounterSubtotal();
         return view;
     }
 
@@ -282,8 +241,6 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
             throw new RuntimeException(context.toString()
                     + " must implement Adapter");
         }
-
-        activity.getPreferences(Context.MODE_MULTI_PROCESS).registerOnSharedPreferenceChangeListener(preferenceChangeListener);
     }
 
     @Override
@@ -297,16 +254,31 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
         refreshServerStatus();
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+    @Override
+    public void OnHostAddressChanged(ServerAddress address) {
+        onRefresh();
+    }
+
+    @Override
+    public void OnHostStatusChanged(ServerAddress address, Boolean connected) {
+
+    }
+
+    @Override
+    public void OnHostResponseRecieved(ServerAddress address, String response) {
+
+    }
+
+    @Override
+    public void OnThemeChanged(int color1, int color2) {
+        setTheme();
+    }
+
+    @Override
+    public void OnCounterValueChanged(int counter, int submit, int buffer, int max) {
+
+    }
+
     public interface Adapter extends ServerStatusAdapter {
     }
 }

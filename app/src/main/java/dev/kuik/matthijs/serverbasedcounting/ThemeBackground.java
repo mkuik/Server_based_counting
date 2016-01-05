@@ -169,6 +169,7 @@ public class ThemeBackground extends View {
             final int cx = getWidth() / 2;
             final int cy = getHeight() / 2;
             final float radius = (float) (Math.sqrt(Math.pow(cx, 2) + Math.pow(cy, 2))) * scale;
+            final int alpha = (int) (100 - Math.pow(10 * scale, 2));
 
             canvas.drawColor(active ? backgroundColor : inacitiveColor);
             Paint paint = new Paint();
@@ -179,7 +180,7 @@ public class ThemeBackground extends View {
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(2);
                 paint.setColor(accentColor);
-                paint.setAlpha((int) (90 * (1 - scale)));
+                paint.setAlpha(alpha);
                 canvas.drawCircle(cx, cy, radius, paint);
             }
         }

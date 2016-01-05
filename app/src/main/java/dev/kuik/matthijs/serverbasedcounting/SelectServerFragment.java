@@ -123,11 +123,6 @@ public class SelectServerFragment extends Fragment
     }
 
     @Override
-    public void OnStatusReport(final String message) {
-        //Log.i("socket test", message);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -168,7 +163,7 @@ public class SelectServerFragment extends Fragment
     @Override
     public void onDestroy() {
         super.onDestroy();
-
+        if (scanner != null) scanner.removeListener();
     }
 
     @Override
@@ -178,7 +173,6 @@ public class SelectServerFragment extends Fragment
 
     public interface Adapter {
         void onSelectedAddress(ServerAddress address);
-
         void onCreateServerAddress(ServerAddress address);
     }
 }

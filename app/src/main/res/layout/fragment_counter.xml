@@ -32,7 +32,8 @@
             android:gravity="center"
             android:layout_weight="1"
             android:layout_marginLeft="@dimen/text_margin"
-            android:layout_marginRight="@dimen/text_margin">
+            android:layout_marginRight="@dimen/text_margin"
+            android:layout_marginBottom="@dimen/text_margin">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -50,32 +51,39 @@
                 android:layout_marginLeft="30dp" />
         </LinearLayout>
 
-        <Button
+        <dev.kuik.matthijs.serverbasedcounting.ThemeButton
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:text="Submit"
-            android:id="@+id/submit_button"/>
+            android:id="@+id/submit_button"
+            style="@style/button"
+            android:layout_marginBottom="@dimen/text_margin" />
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:layout_marginTop="@dimen/text_margin">
 
-            <Button
+            <dev.kuik.matthijs.serverbasedcounting.ThemeButton
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="-1"
-                android:id="@+id/decrement_button" />
+                android:id="@+id/decrement_button"
+                style="@style/button"
+                android:layout_marginRight="@dimen/text_margin" />
 
-            <Button
+            <dev.kuik.matthijs.serverbasedcounting.ThemeButton
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="+1"
-                android:id="@+id/increment_button"/>
+                android:id="@+id/increment_button"
+                style="@style/button"
+                android:layout_marginLeft="@dimen/text_margin" />
         </LinearLayout>
 
     </LinearLayout>

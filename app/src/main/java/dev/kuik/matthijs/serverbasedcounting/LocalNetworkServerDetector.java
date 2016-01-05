@@ -26,7 +26,7 @@ public class LocalNetworkServerDetector extends AsyncTask<String, String, String
     static InetAddress address;
 
     private final String tag = "Server locate";
-    static final int timeout = 200;
+    static final int timeout = 500;
     static int threads = 1;
     static final int thread_scale = 3;
     static final int[] ip_range = {0, 256};
@@ -39,6 +39,10 @@ public class LocalNetworkServerDetector extends AsyncTask<String, String, String
         threads = cpus * thread_scale;
         threads = (threads > 0 ? threads : 1);
         baseIP = ip;
+    }
+
+    public void removeListener() {
+        listener = null;
     }
 
     @Override
@@ -79,11 +83,10 @@ public class LocalNetworkServerDetector extends AsyncTask<String, String, String
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress(ip, port), timeout);
         socket.close();
-        listener.foundOpenPort(new ServerAddress(ip, port, ""));
+        if (listener != null) listener.foundOpenPort(new ServerAddress(ip, port, ""));
     }
 
     public interface Adapter {
         void foundOpenPort(final ServerAddress address);
-        void OnStatusReport(final String e);
     }
 }

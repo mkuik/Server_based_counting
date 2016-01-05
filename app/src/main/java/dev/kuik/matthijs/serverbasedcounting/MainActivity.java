@@ -1,16 +1,11 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.animation.Animator;
-import android.animation.ValueAnimator;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.location.Address;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -40,8 +35,6 @@ public class MainActivity extends FragmentActivity
     PagerTitleStrip title_strip;
     ThemeBackground theme;
     HorizontalScrollView messageScrollView;
-    int color1;
-    int color2;
     Bitmap iconBitmap;
     String iconBase64;
 
@@ -61,7 +54,7 @@ public class MainActivity extends FragmentActivity
         getPrefrences();
 
         if (iconBase64 != null) setHeaderIcon(iconBase64);
-        setTheme(color1, color2, null, false);
+        setTheme(null, false);
         mViewPager.setCurrentItem(1);
     }
 
@@ -73,29 +66,42 @@ public class MainActivity extends FragmentActivity
 
     public void getPrefrences() {
         SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
-        color1 = preferences.getInt("color1", Color.BLACK);
-        color2 = preferences.getInt("color2", Color.WHITE);
+        Global.color1 = preferences.getInt("color1", Color.BLACK);
+        Global.color2 = preferences.getInt("color2", Color.WHITE);
         iconBase64 = preferences.getString("icon", null);
+        final String ip = preferences.getString("ip", "");
+        if (ip.compareTo("") != 0) {
+            final Integer port = preferences.getInt("port", 0);
+            final String hostname = preferences.getString("hostname", "");
+            Global.setHost(new ServerAddress(ip, port, hostname));
+        }
+        Global.counter_value = preferences.getInt("counter", 0);
+        Global.submit_value = preferences.getInt("subtotal", 0);
+        Global.counter_max_value = preferences.getInt("max", 0);
     }
 
     public void setPrefrences() {
         SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt("color1", color1);
-        editor.putInt("color2", color2);
-        if (iconBase64 != null) editor.putString("icon", iconBase64);
+        editor.putInt("color1", Global.color1);
+        editor.putInt("color2", Global.color2);
+        editor.putString("icon", iconBase64);
+        if (Global.getHost() != null) {
+            editor.putString("ip", Global.getHost().ip);
+            editor.putInt("port", Global.getHost().port);
+            editor.putString("hostname", Global.getHost().name);
+        }
+        editor.putInt("count", Global.counter_value);
+        editor.putInt("subtotal", Global.submit_value);
+        editor.putInt("max", Global.counter_max_value);
         editor.commit();
     }
 
     @Override
     public void onSelectedAddress(final ServerAddress address) {
         Log.i("serverselect", address.toString());
-        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("ip", address.ip);
-        editor.putInt("port", address.port);
-        editor.commit();
         getServerTheme(address);
+        Global.setHost(address);
     }
 
     @Override
@@ -128,8 +134,8 @@ public class MainActivity extends FragmentActivity
                     final String primary = jsonResponse.getString("primary_color");
                     final String secondary = jsonResponse.getString("secondary_color");
                     iconBase64 = jsonResponse.getString("icon");
-                    color1 = Color.parseColor(primary);
-                    color2 = Color.parseColor(secondary);
+                    Global.color1 = Color.parseColor(primary);
+                    Global.color2 = Color.parseColor(secondary);
                     setHeaderIcon(iconBase64);
                 } catch (JSONException e) {
                     message.setText(e.toString());
@@ -161,18 +167,18 @@ public class MainActivity extends FragmentActivity
             protected void onPostExecute(Bitmap bitmap) {
                 super.onPostExecute(bitmap);
                 iconBitmap = bitmap;
-                setTheme(color1, color2, iconBitmap, true);
+                setTheme(iconBitmap, true);
             }
         };
         task.execute("{}");
     }
 
-    public void setTheme(final int color1, final int color2, final Bitmap icon, final boolean animate) {
+    public void setTheme(final Bitmap icon, final boolean animate) {
         iconImageView.setImageBitmap(icon);
-        theme.setColor(color1);
-        theme.setAccentColor(color2);
+        theme.setColor(Global.color1);
+        theme.setAccentColor(Global.color2);
         theme.setInacitiveColor(Color.BLACK);
-        title_strip.setTextColor(color2);
+        title_strip.setTextColor(Global.color2);
         if (animate && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
             theme.activate(new Animator.AnimatorListener() {
                 @Override
@@ -183,14 +189,15 @@ public class MainActivity extends FragmentActivity
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     Window window = getWindow();
-                    messageScrollView.setBackgroundColor(color1);
-                    message.setBackgroundColor(color1);
-                    message.setTextColor(color2);
+                    messageScrollView.setBackgroundColor(Global.color1);
+                    message.setBackgroundColor(Global.color1);
+                    message.setTextColor(Global.color2);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        int color = (color1 != Color.WHITE ? color1 : color2);
+                        int color = (Global.color1 != Color.WHITE ? Global.color1 : Global.color2);
                         window.setNavigationBarColor(color);
                         window.setStatusBarColor(color);
                     }
+                    setPrefrences();
                 }
 
                 @Override
@@ -205,21 +212,23 @@ public class MainActivity extends FragmentActivity
             });
         } else {
             theme.activate(null);
-            messageScrollView.setBackgroundColor(color1);
-            message.setBackgroundColor(color1);
-            message.setTextColor(color2);
+            messageScrollView.setBackgroundColor(Global.color1);
+            message.setBackgroundColor(Global.color1);
+            message.setTextColor(Global.color2);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                int color = (color1 != Color.WHITE ? color1 : color2);
+                int color = (Global.color1 != Color.WHITE ? Global.color1 : Global.color2);
                 Window window = getWindow();
                 window.setNavigationBarColor(color);
                 window.setStatusBarColor(color);
             }
+            setPrefrences();
         }
 
     }
 
     @Override
     public void onServerDisconnected(ServerAddress address) {
+        Global.is_in_sync_with_host = false;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
             theme.deactivate(new Animator.AnimatorListener() {
                 @Override
@@ -264,11 +273,11 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onServerResponse(ServerAddress address, JSONObject response) {
-
+        Global.is_in_sync_with_host = true;
         if (theme.isActive())
             theme.activate(null);
         else
-            setTheme(color1, color2, iconBitmap, true);
+            setTheme(iconBitmap, true);
         String str = response.toString();
 
         Context context = getApplicationContext();
