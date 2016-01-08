@@ -13,80 +13,61 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Matthijs Kuik on 23-11-2015.
  */
-public class LocalNetworkServerDetector extends AsyncTask<String, String, String> {
+public class LocalNetworkServerDetector extends AsyncTask<String, ServerAddress, Void> {
 
-    private static Adapter listener;
-    static ExecutorService es;
-    static String baseIP;
-    static InetAddress address;
+    String baseIP;
+    final String tag = "Find sockets";
+    final int timeout = 300;
+    final int[] ip_range = {100, 120};
+    final int[] port_range = {4500};
 
-    private final String tag = "Server locate";
-    static final int timeout = 500;
-    static int threads = 1;
-    static final int thread_scale = 3;
-    static final int[] ip_range = {0, 256};
-    static final int[] port_range = {4500};
-    private static boolean stopThread = false;
-
-    public LocalNetworkServerDetector(Adapter adapter, final String ip) {
-        listener = adapter;
-        int cpus = Runtime.getRuntime().availableProcessors();
-        threads = cpus * thread_scale;
-        threads = (threads > 0 ? threads : 1);
+    public LocalNetworkServerDetector(final String ip) {
         baseIP = ip;
     }
 
-    public void removeListener() {
-        listener = null;
-    }
-
     @Override
-    protected String doInBackground(String... params) {
-        es = Executors.newFixedThreadPool(threads);
+    protected Void doInBackground(String... params) {
+        ExecutorService executor = Executors.newFixedThreadPool(3);
         for (int ipAddress = ip_range[0]; ipAddress < ip_range[1]; ipAddress++) {
             final String ip = baseIP + Integer.toString(ipAddress);
-            testSocketPorts(ip);
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    testSocketPorts(ip);
+                }
+            });
         }
-        es.shutdown();
+        executor.shutdown();
         try {
-            while (!es.isTerminated()) {
-                Thread.sleep(100);
-            }
-        } catch (InterruptedException e) {
-            Log.e(tag, e.toString());
+            while (!executor.awaitTermination(10, TimeUnit.SECONDS)) { }
+        } catch (InterruptedException ignored) {
+
         }
+        Log.e("ip detector", "end");
         return null;
     }
 
     public void testSocketPorts(final String ip) {
-        es.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (isCancelled()) return;
-                for (final Integer port : port_range) {
-                    publishProgress(ip + " " + Integer.toString(port));
-                    try {
-                        connect(ip, port);
-                    } catch (IOException ignored) {
-                    }
-                }
+        Log.i(tag, ip);
+        if (isCancelled()) return;
+        for (final Integer port : port_range) {
+            try {
+                connect(ip, port);
+            } catch (IOException ignored) {
             }
-        });
+        }
     }
 
     public void connect(final String ip, final int port) throws IOException {
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress(ip, port), timeout);
         socket.close();
-        if (listener != null) listener.foundOpenPort(new ServerAddress(ip, port, ""));
-    }
-
-    public interface Adapter {
-        void foundOpenPort(final ServerAddress address);
+        publishProgress(new ServerAddress(ip, port, ""));
     }
 }

@@ -1,5 +1,6 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,7 +25,7 @@ import java.util.Comparator;
  */
 public class ServerListAdapter extends BaseAdapter {
 
-    static final String tag = "ServerListAdapter";
+    final String tag = "ServerListAdapter";
     ArrayList<ServerAddress> serverAddressItems;
     Context context;
 
@@ -44,7 +45,7 @@ public class ServerListAdapter extends BaseAdapter {
         }
         serverAddressItems.add(address);
         Collections.sort(serverAddressItems, new SortByIP());
-        getHostname(address);
+//        getHostname(address);
     }
 
     public void getHostname(final ServerAddress address) {
@@ -60,8 +61,8 @@ public class ServerListAdapter extends BaseAdapter {
 
                 @Override
                 protected void onPostExecute(String response) {
-                    Log.i(tag, "hostname response: " + response);
                     super.onPostExecute(response);
+                    Log.i(tag, "hostname response: " + response);
                     if (response == null) return;
                     try {
                         JSONObject jsonResponse = new JSONObject(response);
@@ -77,7 +78,6 @@ public class ServerListAdapter extends BaseAdapter {
             server.execute(json.toString());
         } catch (JSONException e) {
             Log.i(tag, e.toString());
-            return;
         }
     }
 
@@ -101,17 +101,16 @@ public class ServerListAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
-        View view = convertView;
+    public View getView(final int position, View view, ViewGroup parent) {
 
-        if (view == null && context != null) {
-            LayoutInflater li = (LayoutInflater) context
-                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            view = li.inflate(R.layout.server_address_list_item, null);
+        if (view == null) {
+            LayoutInflater lInflater = (LayoutInflater) context.getSystemService(
+                    Activity.LAYOUT_INFLATER_SERVICE);
+            view = lInflater.inflate(R.layout.server_address_list_item, null);
         }
         ServerAddress item = (ServerAddress) getItem(position);
         TextView ip = (TextView) view.findViewById(R.id.ip_address);
-        if (ip != null) ip.setText(item.toString());
+        if (ip != null && item != null) ip.setText(item.toString());
         return view;
 
     }

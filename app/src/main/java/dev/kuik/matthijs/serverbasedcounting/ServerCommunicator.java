@@ -79,14 +79,11 @@ public class ServerCommunicator extends AsyncTask<String, Integer, String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        Global.notifyResponse(s);
-        Global.setHostConnectionActive(false);
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        Global.setHostConnectionActive(true);
     }
 }
 

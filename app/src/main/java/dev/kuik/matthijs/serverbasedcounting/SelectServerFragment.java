@@ -22,27 +22,22 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class SelectServerFragment extends Fragment
-        implements LocalNetworkServerDetector.Adapter,
-        SwipeRefreshLayout.OnRefreshListener {
+        implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String tag = "SelectServerFragment";
     private static ListView serversListView;
     private static TextView message;
     public static final ServerListAdapter servers = new ServerListAdapter();
-    private static LocalNetworkServerDetector scanner;
-    private static Handler handler;
-    private Adapter listener;
     private static SwipeRefreshLayout swipeLayout;
 
-    private static Context context;
-
     public SelectServerFragment() {
-        handler = new Handler(Looper.getMainLooper());
+
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        servers.setContext(getActivity());
 
     }
 
@@ -52,32 +47,28 @@ public class SelectServerFragment extends Fragment
     }
 
     public int getIP() {
-        final WifiManager wifiMgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        final WifiManager wifiMgr = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
         return wifiMgr.getConnectionInfo().getIpAddress();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        View view;
-        if ((view = getView()) != null) {
-            swipeLayout.measure(view.getWidth(), view.getHeight());
-        }
         onRefresh();
     }
 
-
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
 
     public void scanNetwork() {
-        if (scanner != null) {
-            scanner.cancel(true);
-        }
         swipeLayout.setRefreshing(true);
         servers.clear();
         servers.notifyDataSetChanged();
         final int ip = getIP();
         final String ipBase = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
-        scanner = new LocalNetworkServerDetector(this, ipBase) {
+        LocalNetworkServerDetector scanner = new LocalNetworkServerDetector(ipBase) {
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
@@ -87,39 +78,35 @@ public class SelectServerFragment extends Fragment
             @Override
             protected void onCancelled() {
                 super.onCancelled();
-                scanner = null;
                 swipeLayout.setRefreshing(false);
                 Log.i(tag, "scan cancelled");
             }
 
             @Override
-            protected void onPostExecute(String s) {
-                Log.i(tag, "scan finished");
-                super.onPostExecute(s);
+            protected void onPostExecute(Void ignore) {
+                super.onPostExecute(ignore);
                 swipeLayout.setRefreshing(false);
-                message.setText("");
+                Log.i(tag, "scan finished");
             }
 
             @Override
-            protected void onProgressUpdate(String... values) {
-                //Log.i(tag, values[0]);
+            protected void onProgressUpdate(ServerAddress... values) {
                 super.onProgressUpdate(values);
-                message.setText(values[0]);
+                final ServerAddress address = values[0];
+                if (address != null) {
+                    message.setText(address.toString());
+                    newPort(address);
+                }
+                Log.i(tag, "scan update");
             }
         };
         scanner.execute("");
     }
 
-    @Override
-    public void foundOpenPort(final ServerAddress address) {
+    public void newPort(final ServerAddress address) {
         servers.add(address);
-        handler.post(new Runnable() {
-            public void run() {
-                servers.notifyDataSetChanged();
-            }
-        });
-        listener.onCreateServerAddress(address);
-        Log.i(address.getHost(), "connected to port " + address.getPort());
+        servers.notifyDataSetChanged();
+        Log.i(address.getHost(), "new address " + address.toString());
     }
 
     @Override
@@ -128,51 +115,31 @@ public class SelectServerFragment extends Fragment
         // Inflate the layout for this fragment
 
         View view = inflater.inflate(R.layout.fragment_select_server, container, false);
-        serversListView = (ListView) view.findViewById(R.id.serverList);
-        swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
-        message = (TextView) view.findViewById(R.id.message);
-        swipeLayout.setOnRefreshListener(this);
-        serversListView.setAdapter(servers);
+        if (view != null) {
+            serversListView = (ListView) view.findViewById(R.id.serverList);
+            swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
+            message = (TextView) view.findViewById(R.id.message);
+            swipeLayout.setOnRefreshListener(this);
+            serversListView.setAdapter(servers);
 
-        serversListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(context, "click " + position + " " +  servers.getItem(position), Toast.LENGTH_SHORT).show();
-                if (listener != null) {
-                    listener.onSelectedAddress((ServerAddress) servers.getItem(position));
+            serversListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Global.setHost((ServerAddress) servers.getItem(position));
+                    Global.notifyHost();
                 }
-            }
-        });
-
-        return view;
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        context = activity;
-        servers.setContext(activity);
-        try {
-            listener = (Adapter) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement Adapter");
+            });
         }
+        return view;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (scanner != null) scanner.removeListener();
     }
 
     @Override
     public void onRefresh() {
         scanNetwork();
-    }
-
-    public interface Adapter {
-        void onSelectedAddress(ServerAddress address);
-        void onCreateServerAddress(ServerAddress address);
     }
 }

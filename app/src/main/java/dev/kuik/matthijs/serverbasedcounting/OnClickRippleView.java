@@ -117,7 +117,7 @@ public class OnClickRippleView extends View {
         }
 
         return new Pair<>(x1, x2);
-    };
+    }
 
 
     @Override
@@ -156,7 +156,6 @@ public class OnClickRippleView extends View {
                     canvas.drawLine(lineLeft.first.y, lineLeft.first.x, lineLeft.second.y, lineLeft.second.x, paint);
                 if (lineRight.second != null)
                     canvas.drawLine(lineRight.first.y, lineRight.first.x, lineRight.second.y, lineRight.second.x, paint);
-                Log.i("intersection", String.format("scale:%.2f alpha:%d radius:%.2f", scale, paint.getAlpha(), radius));
             }
         }
         super.onDraw(canvas);

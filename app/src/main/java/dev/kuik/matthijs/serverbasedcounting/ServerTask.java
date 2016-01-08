@@ -1,12 +1,15 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
-public class TaskQueueItem implements Runnable {
+import android.os.AsyncTask;
+import android.util.Log;
+
+public class ServerTask implements Runnable {
     public String json;
     public Integer id;
     public ServerCommunicator task;
     private static int id_counter = 0;
 
-    TaskQueueItem(final String json, final ServerCommunicator task) {
+    ServerTask(final String json, final ServerCommunicator task) {
         this.json = json;
         this.task = task;
         this.id = id_counter++;
@@ -14,6 +17,7 @@ public class TaskQueueItem implements Runnable {
 
     @Override
     public void run() {
+        Log.i("task", json);
         task.execute(json);
     }
 }

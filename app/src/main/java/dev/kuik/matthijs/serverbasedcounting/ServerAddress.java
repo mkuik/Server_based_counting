@@ -1,5 +1,6 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -12,10 +13,10 @@ import java.util.Comparator;
  */
 
 public class ServerAddress {
-    public String ip;
+    public String ip = "";
     public InetAddress net;
-    public Integer port;
-    public String name;
+    public Integer port = 0;
+    public String name = "";
 
     ServerAddress(final String ip, final int port, final String name) {
         this.name = name;
@@ -52,6 +53,10 @@ public class ServerAddress {
     }
 
     public String getPort() {
-        return port.toString();
+        if (port != null) {
+            return port.toString();
+        } else {
+            return "NA";
+        }
     }
 }

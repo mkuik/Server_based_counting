@@ -90,6 +90,7 @@ public class ThemeBackground extends View {
     }
 
     public void activate(Animator.AnimatorListener listener) {
+        setActive(true);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
             ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
             animator.setDuration(timeout);

@@ -22,7 +22,7 @@ public class UserListAdapter extends BaseExpandableListAdapter {
     private LayoutInflater inflater;
 
     public UserListAdapter() {
-        users = new ArrayList<User>();
+        users = new ArrayList<>();
     }
 
     public void addUser(final User user) {

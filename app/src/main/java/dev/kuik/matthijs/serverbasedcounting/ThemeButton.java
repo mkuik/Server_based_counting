@@ -98,7 +98,7 @@ public class ThemeButton extends Button {
         }
 
         return new Pair<>(x1, x2);
-    };
+    }
 
 
     @Override
