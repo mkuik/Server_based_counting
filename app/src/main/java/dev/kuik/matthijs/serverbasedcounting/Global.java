@@ -244,7 +244,7 @@ public class Global {
         if (getHost() == null) return;
         final JSONObject jsonCommand = new JSONObject();
         try {
-            jsonCommand.put("user", "clientID");
+            jsonCommand.put("user", clientID);
             jsonCommand.put("function", "users");
             final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
                 @Override

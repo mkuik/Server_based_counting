@@ -50,6 +50,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
 
         Global.setUsername(this);
         Global.getPrefrences(this);
+        Global.setBitmapIcon();
     }
 
     @Override
