@@ -19,14 +19,31 @@ import java.util.zip.Inflater;
 public class UserListAdapter extends BaseExpandableListAdapter {
 
     List<User> users;
+    List<OnUserOptionListener> listeners = new ArrayList<>();;
     private LayoutInflater inflater;
 
     public UserListAdapter() {
         users = new ArrayList<>();
     }
 
+    public UserListAdapter(List<User> list) {
+        users = list;
+    }
+
     public void addUser(final User user) {
         users.add(user);
+    }
+
+    public void clear() {
+        users.clear();
+    }
+
+    public void addOptionClickListener(OnUserOptionListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeOptionClickListener(OnUserOptionListener listener) {
+        listeners.remove(listener);
     }
 
     public boolean isNewUser(final String username) {
@@ -86,29 +103,38 @@ public class UserListAdapter extends BaseExpandableListAdapter {
             username.setText(user.getName());
         }
         return convertView;
-
     }
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.user_view_group_subitem, null);
-            final CheckedTextView row = (CheckedTextView) convertView.findViewById(R.id.checkbox);
-            row.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    row.setChecked(!row.isChecked());
-                }
-            });
             final User user = users.get(groupPosition);
+            final CheckedTextView row = (CheckedTextView) convertView.findViewById(R.id.checkbox);
             switch (childPosition) {
                 case 0:
                     row.setText("Edit rights");
                     row.setChecked(user.isEditor());
+                    row.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            user.setEditorRights(!user.isEditor());
+                            row.setChecked(user.isEditor());
+                            notifyUserOptionClick(user);
+                        }
+                    });
                     break;
                 case 1:
                     row.setText("Admin rights");
                     row.setChecked(user.isAdmīn());
+                    row.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            user.setAdminRights(!user.isAdmīn());
+                            row.setChecked(user.isAdmīn());
+                            notifyUserOptionClick(user);
+                        }
+                    });
                     break;
             }
         }
@@ -117,6 +143,17 @@ public class UserListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public boolean isChildSelectable(int groupPosition, int childPosition) {
-        return false;
+        return true;
+    }
+
+    private void notifyUserOptionClick(final User user) {
+        for (OnUserOptionListener l : listeners) {
+            if (l != null) l.OnOptionClick(user);
+        }
+    }
+
+    public interface OnUserOptionListener {
+        void OnOptionClick(User user);
     }
 }
+

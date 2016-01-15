@@ -44,11 +44,9 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
         iconImageView = (ImageView) findViewById(R.id.logo);
         title_strip = (PagerTitleStrip) findViewById(R.id.pager_title_strip);
         theme = (ThemeBackground) findViewById(R.id.theme_background);
-        theme.setInacitiveColor(Color.BLACK);
         messageScrollView = (HorizontalScrollView) findViewById(R.id.message_scroll_view);
         mViewPager.setAdapter(mDemoCollectionPagerAdapter);
 
-        Global.setUsername(this);
         Global.getPrefrences(this);
         Global.setBitmapIcon();
     }
@@ -66,20 +64,17 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
         Global.removeListener(this);
     }
 
-    public void setTheme(final boolean animate) {
-        iconImageView.setImageBitmap(Global.iconBitmap);
-        theme.setColor(Global.color1);
-        theme.setAccentColor(Global.color2);
-        theme.setInacitiveColor(Color.BLACK);
-        title_strip.setTextColor(Global.color2);
-        if (animate && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+    public void setTheme(final Bitmap icon, final int color1, final int color2) {
+        iconImageView.setImageBitmap(icon);
+        title_strip.setTextColor(color2);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
             theme.activate(new Animator.AnimatorListener() {
                 @Override
                 public void onAnimationStart(Animator animation) {}
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    setThemeColor(Global.getColor1(), Global.getColor2());
+                    setThemeColor(color1, color2);
                 }
 
                 @Override
@@ -90,7 +85,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
             });
         } else {
             theme.activate(null);
-            setThemeColor(Global.getColor1(), Global.getColor2());
+            setThemeColor(color1, color2);
         }
     }
 
@@ -108,51 +103,39 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
 
     @Override
     public void OnHostAddressChanged(ServerAddress address) {
+        theme.setBackgroundColor(theme.getForegroundColor());
         Global.syncTheme();
+        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("ip", address.ip);
+        editor.putInt("port", address.port);
+        editor.putString("hostname", address.name);
+        editor.commit();
     }
 
     @Override
     public void OnHostResponseRecieved(ServerAddress address, String response) {
-        Log.i("Host response", "" + response);
-        if (theme.isActive()) theme.activate(null);
-        else setTheme(true);
-
-        CharSequence text = response.length() + "b from " + address.toString();
-        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+        if (theme.getMode() != ThemeBackground.MODE.ON) {
+            setTheme(Global.iconBitmap, Global.getColor1(), Global.getColor2());
+        } else {
+            theme.activate(null);
+        }
         message.setText(response);
     }
 
     @Override
     public void OnHostResponseLost(ServerAddress address, String response) {
-        Log.i("Host response lost", "" + response);
-
-        if (response != null) Toast.makeText(this, response, Toast.LENGTH_SHORT).show();
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-            theme.deactivate(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {}
-
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    setThemeColor(Color.BLACK, Color.WHITE);
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {}
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {}
-            });
-        } else {
-            theme.deactivate(null);
+        if (!theme.isInactive()) {
+            iconImageView.setImageBitmap(null);
             setThemeColor(Color.BLACK, Color.WHITE);
+            theme.deactivate(null);
         }
     }
 
     @Override
     public void OnThemeChanged(Bitmap icon, int color1, int color2) {
-        setTheme(true);
+        theme.setForegroundColor(color1);
+        setTheme(icon, color1, color2);
     }
 
     @Override

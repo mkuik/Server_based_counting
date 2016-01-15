@@ -17,30 +17,33 @@ import android.view.View;
  * TODO: document your custom view class.
  */
 public class ThemeBackground extends View {
-    private int activeColor;
-    private int backgroundColor;
-    private int inacitiveColor;
-
-    public int getAccentColor() {
-        return accentColor;
-    }
-
-    public void setAccentColor(int accentColor) {
-        this.accentColor = accentColor;
-    }
-
-    private int accentColor;
-    private boolean active = false;
+    private final int defaultColor = Color.BLACK;
+    private int accentColor = Color.WHITE;
+    private int foregroundColor = defaultColor;
+    private int backgroundColor = defaultColor;
     private float scale;
-    private int timeout = 800;
+    private int timeout = 500;
+    public enum MODE {
+        OFF,
+        TURNING_OFF,
+        TURNING_ON,
+        ON,
+    };
+    private MODE mode = MODE.OFF;
 
     public boolean isActive() {
-        return active;
+        return mode == MODE.ON || mode == MODE.TURNING_ON;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public MODE getMode() {
+        return mode;
     }
+
+    public boolean isInactive() {
+        return mode == MODE.OFF || mode == MODE.TURNING_OFF;
+    }
+
+    public boolean isAnimating() { return mode == MODE.TURNING_ON || mode == MODE.TURNING_OFF; }
 
     public ThemeBackground(Context context) {
         super(context);
@@ -48,18 +51,6 @@ public class ThemeBackground extends View {
 
     public ThemeBackground(Context context, AttributeSet attrs) {
         super(context, attrs);
-        TypedArray a = context.getTheme().obtainStyledAttributes(
-                attrs,
-                R.styleable.ThemeBackground,
-                0, 0);
-
-        try {
-            activeColor = a.getColor(R.styleable.ThemeBackground_primaryColor, 0);
-            backgroundColor = a.getColor(R.styleable.ThemeBackground_secondaryColor, 0);
-            scale = a.getFloat(R.styleable.ThemeBackground_scale, 0);
-        } finally {
-            a.recycle();
-        }
     }
 
     public ThemeBackground(Context context, AttributeSet attrs, int defStyle) {
@@ -69,29 +60,43 @@ public class ThemeBackground extends View {
     public void setScale(float scale) {
         if (scale >= 0 && scale <= 1) {
             this.scale = scale;
-            if (scale == 1) {
-                backgroundColor = activeColor;
-            }
+            if (scale == 1) setBackgroundColor(getForegroundColor());
         }
     }
 
-    public void setActiveColor(int color) {
-        activeColor = color;
+    public void setForegroundColor(int foregroundColor) {
+        this.foregroundColor = foregroundColor;
     }
 
-    public void setInacitiveColor(int color) {
-        inacitiveColor = color;
+    @Override
+    public void setBackgroundColor(int backgroundColor) {
+        this.backgroundColor = backgroundColor;
     }
 
-    public void setColor(int color) {
-        backgroundColor = activeColor;
-        activeColor = color;
-        scale = 0;
+    public int getForegroundColor() {
+        return foregroundColor;
+    }
+
+    public int getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public int getAccentColor() {
+        return accentColor;
+    }
+
+    public void setAccentColor(int accentColor) {
+        this.accentColor = accentColor;
+    }
+
+    public int getDefaultColor() {
+        return defaultColor;
     }
 
     public void activate(Animator.AnimatorListener listener) {
-        setActive(true);
+        if (mode == MODE.TURNING_ON) return;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+            if (mode != MODE.ON) mode = MODE.TURNING_ON;
             ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
             animator.setDuration(timeout);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -112,12 +117,11 @@ public class ThemeBackground extends View {
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    setActive(true);
+                    mode = MODE.ON;
                 }
 
                 @Override
                 public void onAnimationCancel(Animator animation) {
-
                 }
 
                 @Override
@@ -133,26 +137,42 @@ public class ThemeBackground extends View {
     }
 
     public void deactivate(Animator.AnimatorListener listener) {
-        if (isActive()) {
-            setActive(false);
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-                ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
-                animator.setDuration(timeout);
-                if (listener != null) animator.addListener(listener);
-                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animation) {
-                        Float value = (Float) (animation.getAnimatedValue());
-                        setScale(value);
-                        invalidate();
-                    }
-                });
-                animator.start();
-            } else {
-                setScale(0);
-                invalidate();
-            }
+        if (mode == MODE.TURNING_OFF || mode == MODE.OFF) return;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+            mode = MODE.TURNING_OFF;
+            ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
+            animator.setDuration(timeout);
+            if (listener != null) animator.addListener(listener);
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    Float value = (Float) (animation.getAnimatedValue());
+                    setScale(value);
+                    invalidate();
+                }
+            });
+            animator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mode = MODE.OFF;
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            animator.start();
         } else {
             setScale(0);
             invalidate();
@@ -162,21 +182,20 @@ public class ThemeBackground extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        Paint paint = new Paint();
         if (scale <= 0) {
-            canvas.drawColor(active ? backgroundColor : inacitiveColor);
+            canvas.drawColor(isInactive() ? defaultColor : backgroundColor);
         } else if (scale >= 1) {
-            canvas.drawColor(activeColor);
+            canvas.drawColor(foregroundColor);
         } else {
+            canvas.drawColor(isActive() ? backgroundColor : defaultColor);
             final int cx = getWidth() / 2;
             final int cy = getHeight() / 2;
             final float radius = (float) (Math.sqrt(Math.pow(cx, 2) + Math.pow(cy, 2))) * scale;
-            final int alpha = (int) (100 - Math.pow(10 * scale, 2));
-
-            canvas.drawColor(active ? backgroundColor : inacitiveColor);
-            Paint paint = new Paint();
-            paint.setColor(activeColor);
+            final int alpha = (int) (100 - 100 * scale);
+            paint.setColor(foregroundColor);
             canvas.drawCircle(cx, cy, radius, paint);
-            if (active && activeColor == backgroundColor) {
+            if (backgroundColor == foregroundColor && isActive()) {
                 paint.setAntiAlias(true);
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(2);

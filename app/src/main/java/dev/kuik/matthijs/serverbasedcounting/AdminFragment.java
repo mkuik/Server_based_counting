@@ -5,14 +5,21 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
+
+import org.json.JSONException;
+
+import java.util.ArrayList;
 import java.util.List;
 
-public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, Global.Adapter {
+public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
+        Global.Adapter, UserListAdapter.OnUserOptionListener {
 
     ExpandableListView listview;
     UserListAdapter userlistadapter;
@@ -42,6 +49,7 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         userlistadapter = new UserListAdapter();
         userlistadapter.setInflater((LayoutInflater)
                 getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE));
+        userlistadapter.addOptionClickListener(this);
     }
 
     @Override
@@ -54,6 +62,7 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
             message = (TextView) view.findViewById(R.id.message);
             swipeLayout.setOnRefreshListener(this);
             listview.setAdapter(userlistadapter);
+            listview.setClickable(true);
         }
         return view;
     }
@@ -90,11 +99,19 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     @Override
     public void OnUserListRecieved(List<User> users) {
-        for (User u : users) {
-            if (userlistadapter.isNewUser(u.getName())) {
-                userlistadapter.addUser(u);
-            }
-        }
+        swipeLayout.setRefreshing(false);
+        userlistadapter.clear();
+        for (User u : users) userlistadapter.addUser(u);
         userlistadapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void OnOptionClick(User user) {
+        Global.syncUserRights(user);
+        try {
+            Log.i("click", user.toJSON().toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }

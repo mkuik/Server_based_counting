@@ -25,7 +25,7 @@ public class DemoCollectionPagerAdapter extends FragmentStatePagerAdapter {
                 fragment = new AdminFragment();
                 break;
             default:
-                fragment = new ErrorFragment();
+                fragment = new PrefsFragment();
                 break;
         }
         return fragment;

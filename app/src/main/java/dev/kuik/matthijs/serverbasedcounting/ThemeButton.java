@@ -23,7 +23,7 @@ public class ThemeButton extends Button {
     private float scale = 0;
     private int color = Color.BLACK;
     private int linewidth = 3;
-    private int timeout = 600;
+    private int timeout = 300;
     private Point pointOfCircleOrigin;
 
     public void setColor(int color) {
@@ -137,7 +137,7 @@ public class ThemeButton extends Button {
                     canvas.drawLine(lineLeft.first.y, lineLeft.first.x, lineLeft.second.y, lineLeft.second.x, paint);
                 if (lineRight.second != null)
                     canvas.drawLine(lineRight.first.y, lineRight.first.x, lineRight.second.y, lineRight.second.x, paint);
-                Log.i("intersection", String.format("scale:%.2f alpha:%d radius:%.2f", scale, paint.getAlpha(), radius));
+
             }
         }
         super.onDraw(canvas);

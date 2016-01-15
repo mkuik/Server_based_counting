@@ -60,14 +60,11 @@
         android:fillViewport="false">
 
         <TextView
+            android:visibility="gone"
             android:id="@+id/message"
             style="@style/CatenaThemeWhite"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="false"
-            android:layout_weight="0"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:paddingLeft="@dimen/text_margin"
             android:paddingTop="@dimen/text_margin"

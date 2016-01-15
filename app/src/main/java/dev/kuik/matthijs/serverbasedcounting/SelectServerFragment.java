@@ -126,6 +126,7 @@ public class SelectServerFragment extends Fragment
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Global.setHost((ServerAddress) servers.getItem(position));
+                    Global.setUser(getActivity());
                     Global.notifyHost();
                 }
             });

@@ -35,9 +35,9 @@ public class Global {
     public static List<Adapter> listeners = new ArrayList<>();
     public static List<Runnable> queue = new ArrayList<>();
     public static boolean hostConnectionActive = false;
-    public static String clientID = "";
     public static String iconB64;
     public static Bitmap iconBitmap;
+    public static User user;
 
     public static void getPrefrences(Activity activity) {
         if (activity != null) {
@@ -45,6 +45,13 @@ public class Global {
             Global.color1 = preferences.getInt("color1", Color.BLACK);
             Global.color2 = preferences.getInt("color2", Color.WHITE);
             iconB64 = preferences.getString("icon", null);
+            final String jsonstr = preferences.getString("user", "");
+            try {
+                JSONObject jsonobj = new JSONObject(jsonstr);
+                user = new User(jsonobj);
+            } catch (JSONException e) {
+                setUser(activity);
+            }
             final String ip = preferences.getString("ip", "");
             if (ip.compareTo("") != 0) {
                 final Integer port = preferences.getInt("port", 0);
@@ -58,6 +65,10 @@ public class Global {
         }
     }
 
+    public static void setUser(Activity activity) {
+        user = new User(getUsername(activity));
+    }
+
     public static void setPrefrences(Activity activity) {
         if (activity != null) {
             SharedPreferences preferences = activity.getPreferences(Context.MODE_PRIVATE);
@@ -65,6 +76,11 @@ public class Global {
             editor.putInt("color1", Global.color1);
             editor.putInt("color2", Global.color2);
             editor.putString("icon", iconB64);
+            try {
+                editor.putString("user", user.toJSON().toString());
+            } catch (JSONException | NullPointerException e) {
+                Log.e("store user in pref", e.toString());
+            }
             if (Global.getHost() != null) {
                 editor.putString("ip", Global.getHost().ip);
                 editor.putInt("port", Global.getHost().port);
@@ -78,13 +94,20 @@ public class Global {
         }
     }
 
+    public static User getUser() {
+        return user;
+    }
+
+    public static void setUser(User user) {
+        Global.user = user;
+    }
 
     public static void setTheme(Integer color1, Integer color2) {
         Global.color1 = color1;
         Global.color2 = color2;
     }
 
-    public static boolean setUsername(Context context) {
+    public static String getUsername(Context context) {
         AccountManager manager = AccountManager.get(context);
         Account[] accounts = manager.getAccountsByType("com.google");
         List<String> possibleEmails = new LinkedList<>();
@@ -97,11 +120,9 @@ public class Global {
             String email = possibleEmails.get(0);
             String[] parts = email.split("@");
 
-            if (parts.length > 1)
-                clientID = parts[0];
-            return true;
+            if (parts.length > 1) return parts[0];
         }
-        return false;
+        return "";
     }
 
     public static Integer getColor1() {
@@ -165,30 +186,33 @@ public class Global {
         if (getHost() == null) return;
         final JSONObject jsonCommand = new JSONObject();
         try {
-            jsonCommand.put("subtotal", getSubmitBufferValue());
-            jsonCommand.put("user", clientID);
-            jsonCommand.put("function", "status");
+            jsonCommand.put("delta", getSubmitBufferValue());
+            jsonCommand.put("user", user.toJSON());
+            jsonCommand.put("max", 0);
+            jsonCommand.put("count", 0);
             final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
                 @Override
                 protected void onPostExecute(String jsonString) {
                     super.onPostExecute(jsonString);
                     if (jsonString == null) {
                         notifyLost("response is null");
-                        return;
+                        hostConnectionActive = false;
                     } else if (jsonString.compareTo("") == 0) {
                         notifyLost("response is empty");
-                        return;
+                        hostConnectionActive = false;
+                    } else {
+                        try {
+                            JSONObject jsonResponse = new JSONObject(jsonString);
+                            setCounterValue(jsonResponse.getInt("count"));
+                            setCounterMaxValue(jsonResponse.getInt("max"));
+                            notifyCounter();
+                        } catch (JSONException e) {
+                            Log.e("sync counter response", e.toString());
+                        }
+                        notifyResponse(jsonString);
+                        runFirstInQueue();
                     }
-                    notifyResponse("counter " + jsonString);
-                    try {
-                        JSONObject jsonResponse = new JSONObject(jsonString);
-                        setCounterValue(jsonResponse.getInt("count"));
-                        setCounterMaxValue(jsonResponse.getInt("max"));
-                        notifyCounter();
-                    } catch (JSONException e) {
-                        Log.e("sync counter response", e.toString());
-                    }
-                    runFirstInQueue();
+
                 }
             };
             add(new ServerTask(jsonCommand.toString(), serverCommunicator));
@@ -202,8 +226,8 @@ public class Global {
         if (getHost() == null) return;
         final JSONObject jsonCommand = new JSONObject();
         try {
-            jsonCommand.put("primary_color", "");
-            jsonCommand.put("secondary_color", "");
+            jsonCommand.put("color1", "");
+            jsonCommand.put("color2", "");
             jsonCommand.put("icon", "");
             final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
                 @Override
@@ -211,26 +235,26 @@ public class Global {
                     super.onPostExecute(jsonString);
                     if (jsonString == null) {
                         notifyLost("response is null");
-                        return;
                     } else if (jsonString.compareTo("") == 0) {
                         notifyLost("response is empty");
-                        return;
-                    }
-                    notifyResponse("theme " + jsonString);
-                    try {
-                        JSONObject jsonResponse = new JSONObject(jsonString);
-                        final String color1String = jsonResponse.getString("primary_color");
-                        final String color2String = jsonResponse.getString("secondary_color");
-                        if (color1String.compareTo("") != 0 && color2String.compareTo("") != 0) {
-                            setTheme(Color.parseColor(color1String), Color.parseColor(color2String));
-                            notifyTheme();
+                    } else {
+                        try {
+                            JSONObject jsonResponse = new JSONObject(jsonString);
+                            final String color1String = jsonResponse.getString("color1");
+                            final String color2String = jsonResponse.getString("color2");
+                            if (color1String.compareTo("") != 0 && color2String.compareTo("") != 0) {
+                                setTheme(Color.parseColor(color1String), Color.parseColor(color2String));
+                                notifyTheme();
+                            }
+                            iconB64 = jsonResponse.getString("icon");
+                            setBitmapIcon();
+                        } catch (JSONException e) {
+                            Log.e("sync theme response", e.toString());
                         }
-                        iconB64 = jsonResponse.getString("icon");
-                        setBitmapIcon();
-                    } catch (JSONException e) {
-                        Log.e("sync theme response", e.toString());
+                        notifyResponse(jsonString);
                     }
                     runFirstInQueue();
+
                 }
             };
             add(new ServerTask(jsonCommand.toString(), serverCommunicator));
@@ -244,30 +268,61 @@ public class Global {
         if (getHost() == null) return;
         final JSONObject jsonCommand = new JSONObject();
         try {
-            jsonCommand.put("user", clientID);
-            jsonCommand.put("function", "users");
+            jsonCommand.put("user", user.toJSON());
+            jsonCommand.put("users", 0);
             final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
                 @Override
                 protected void onPostExecute(String jsonString) {
                     super.onPostExecute(jsonString);
                     if (jsonString == null) {
                         notifyLost("response is null");
-                        return;
                     } else if (jsonString.compareTo("") == 0) {
                         notifyLost("response is empty");
-                        return;
-                    }
-                    notifyResponse("users " + jsonString);
-                    try {
-                        JSONObject jsonResponse = new JSONObject(jsonString);
-                        final JSONArray users = jsonResponse.getJSONArray("users");
-                        final List<User> userArray = new ArrayList<>();
-                        for (int i = 0; i != users.length(); ++i) {
-                            userArray.add(new User(users.getString(i)));
+                    } else {
+                        try {
+                            JSONObject jsonResponse = new JSONObject(jsonString);
+                            final int nUsers = jsonResponse.getInt("users");
+                            final List<User> userArray = new ArrayList<>();
+                            for (int i = 0; i != nUsers; ++i) {
+                                JSONObject json = jsonResponse.getJSONObject("u#" + i);
+                                User user = new User(json.getString("name"), json.getInt("id"));
+                                user.setEditorRights(json.getBoolean("edit"));
+                                user.setAdminRights(json.getBoolean("admin"));
+                                userArray.add(user);
+                            }
+                            notifyUsers(userArray);
+                        } catch (JSONException e) {
+                            Log.e("sync users response", e.toString());
                         }
-                        notifyUsers(userArray);
-                    } catch (JSONException e) {
-                        Log.e("sync users response", e.toString());
+                        notifyResponse(jsonString);
+
+                    }
+                    runFirstInQueue();
+                }
+            };
+            add(new ServerTask(jsonCommand.toString(), serverCommunicator));
+        } catch (JSONException e) {
+            Log.e("sync users", e.toString());
+        }
+    }
+
+    public static void syncUserRights(final User chmod) {
+        Log.i("task in queue", "sync user rights");
+        if (getHost() == null) return;
+        final JSONObject jsonCommand = new JSONObject();
+        try {
+            jsonCommand.put("user", user.toJSON());
+            jsonCommand.put("chmod", chmod.toJSON());
+            final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
+                @Override
+                protected void onPostExecute(String jsonString) {
+                    super.onPostExecute(jsonString);
+                    if (jsonString == null) {
+                        notifyLost("response is null");
+                    } else if (jsonString.compareTo("") == 0) {
+                        notifyLost("response is empty");
+                    } else {
+                        notifyResponse(jsonString);
                     }
                     runFirstInQueue();
                 }
@@ -321,7 +376,7 @@ public class Global {
             queue.remove(0);
             if (task != null) {
                 hostConnectionActive = true;
-                new Thread(task).run();
+                task.run();
             }
         } catch (IndexOutOfBoundsException e) {
             hostConnectionActive = false;
@@ -348,6 +403,13 @@ public class Global {
 
     public static void notifyResponse(final String response) {
         Log.i("notify", "response");
+        try {
+            JSONObject jsonResponse = new JSONObject(response);
+            JSONObject jsonUser = jsonResponse.getJSONObject("user");
+            user.setID(jsonUser.getInt("id"));
+        } catch (JSONException e) {
+            Log.i("get user from response", e.toString());
+        }
         for (Adapter adapter : listeners) {
             if (adapter != null)
                 adapter.OnHostResponseRecieved(getHost(), response);
@@ -363,7 +425,7 @@ public class Global {
     }
 
     public static void notifyHost() {
-        Log.i("notify", "host");
+        Log.i("notify", "host " + getHost().toString());
         for (Adapter adapter : listeners) {
             if (adapter != null)
                 adapter.OnHostAddressChanged(getHost());

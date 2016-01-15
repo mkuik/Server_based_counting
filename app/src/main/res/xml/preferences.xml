@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <EditTextPreference android:title="IP Adress"
+        android:key="ip"
+        android:summary="Provide your server ip adress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="phone"/>
+
+    <EditTextPreference android:title="Port"
+        android:key="port"
+        android:summary="Provide your server port adress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number" />
+
+    <EditTextPreference android:title="Admin privileges"
+        android:key="admin_pswrd"
+        android:summary="Get admin functionality"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword" />
+
+    <EditTextPreference android:title="Count"
+        android:key="counter"
+        android:summary="Overrride the count variable"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number" />
+
+    <EditTextPreference android:title="Max"
+        android:key="max"
+        android:summary="Overrride the max variable"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number" />
+
+</PreferenceScreen>
