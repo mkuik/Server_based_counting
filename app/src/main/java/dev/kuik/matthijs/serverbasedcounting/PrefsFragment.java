@@ -32,7 +32,7 @@ public class PrefsFragment extends PreferenceFragment {
         addPreferencesFromResource(R.xml.preferences);
         ip = findPreference("ip");
         port = findPreference("port");
-        count = findPreference("counter");
+        count = findPreference("count");
         max = findPreference("max");
 
         ip.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {

@@ -8,15 +8,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
@@ -108,9 +104,19 @@ public class ServerListAdapter extends BaseAdapter {
                     Activity.LAYOUT_INFLATER_SERVICE);
             view = lInflater.inflate(R.layout.server_address_list_item, null);
         }
-        ServerAddress item = (ServerAddress) getItem(position);
-        TextView ip = (TextView) view.findViewById(R.id.ip_address);
-        if (ip != null && item != null) ip.setText(item.toString());
+        final ServerAddress item = (ServerAddress) getItem(position);
+        final TextView title = (TextView) view.findViewById(R.id.text1);
+        final TextView subtitle = (TextView) view.findViewById(R.id.text2);
+        title.setText(item.name);
+        subtitle.setText(item.ip + " @ " + item.port);
+        if (item.name == null) {
+            Global.syncServerName(item, new Runnable() {
+                @Override
+                public void run() {
+                    notifyDataSetChanged();
+                }
+            });
+        }
         return view;
 
     }

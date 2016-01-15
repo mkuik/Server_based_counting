@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingLeft="30dp"
+    android:paddingTop="15dp"
+    android:paddingRight="30dp"
+    android:paddingBottom="15dp">
 
     <CheckedTextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/text_margin"
         android:checkMark="@drawable/abc_btn_check_material"
-        android:id="@+id/checkbox"/>
+        android:id="@+id/checkbox"
+        android:textSize="15dp"
+        android:gravity="center_vertical"/>
 
 </LinearLayout>

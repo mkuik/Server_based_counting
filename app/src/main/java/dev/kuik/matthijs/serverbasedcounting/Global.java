@@ -365,6 +365,40 @@ public class Global {
         }
     }
 
+    public static void syncServerName(final ServerAddress server, final Runnable post) {
+        Log.i("task in queue", "get name " + server.toString());
+        if (getHost() == null) return;
+        JSONObject json = new JSONObject();
+        try {
+            json.put("user", user.toJSON());
+            json.put("info", "");
+            final ServerCommunicator serverCommunicator = new ServerCommunicator(server) {
+                @Override
+                protected void onPostExecute(String jsonString) {
+                    super.onPostExecute(jsonString);
+                    if (jsonString == null) {
+                        notifyLost("response is null");
+                    } else if (jsonString.compareTo("") == 0) {
+                        notifyLost("response is empty");
+                    } else {
+                        notifyResponse(jsonString);
+                        try {
+                            JSONObject resp = new JSONObject(jsonString);
+                            server.setName(resp.getString("info"));
+                            if (post != null) post.run();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    runFirstInQueue();
+                }
+            };
+            add(new ServerTask(json.toString(), serverCommunicator));
+        } catch (JSONException e) {
+            Log.e("sync users", e.toString());
+        }
+    }
+
     private static void add(final Runnable task) {
         queue.add(task);
         if (!hostConnectionActive) runFirstInQueue();
@@ -402,7 +436,7 @@ public class Global {
     }
 
     public static void notifyResponse(final String response) {
-        Log.i("notify", "response");
+        Log.i("notify", "response " + response);
         try {
             JSONObject jsonResponse = new JSONObject(response);
             JSONObject jsonUser = jsonResponse.getJSONObject("user");

@@ -16,7 +16,7 @@ public class ServerAddress {
     public String ip = "";
     public InetAddress net;
     public Integer port = 0;
-    public String name = "";
+    public String name;
 
     ServerAddress(final String ip, final int port, final String name) {
         this.name = name;
@@ -25,7 +25,7 @@ public class ServerAddress {
     }
 
     public String toString() {
-        if (name.compareTo("") == 0)
+        if (name == null || name.compareTo("") == 0)
             return ip + ":" + port.toString();
         else
             return name;
@@ -36,7 +36,7 @@ public class ServerAddress {
     }
 
     public String getHost() {
-        if (net != null) {
+        if (net != null && name != null) {
             if (name.compareTo(ip) == 0) {
                 return ip;
             } else {

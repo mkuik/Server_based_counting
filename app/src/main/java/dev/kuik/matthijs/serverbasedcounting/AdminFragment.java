@@ -23,7 +23,6 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     ExpandableListView listview;
     UserListAdapter userlistadapter;
-    TextView message;
     SwipeRefreshLayout swipeLayout;
 
     public AdminFragment() {
@@ -59,7 +58,6 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         if (view != null) {
             listview = (ExpandableListView) view.findViewById(R.id.users_listview);
             swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
-            message = (TextView) view.findViewById(R.id.message);
             swipeLayout.setOnRefreshListener(this);
             listview.setAdapter(userlistadapter);
             listview.setClickable(true);

@@ -1,6 +1,7 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
 import android.animation.Animator;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -98,6 +99,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
             Window window = getWindow();
             window.setNavigationBarColor(color);
             window.setStatusBarColor(color);
+            setTaskDescription(new ActivityManager.TaskDescription(null, null, color1));
         }
     }
 

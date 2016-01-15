@@ -68,6 +68,6 @@ public class LocalNetworkServerDetector extends AsyncTask<String, ServerAddress,
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress(ip, port), timeout);
         socket.close();
-        publishProgress(new ServerAddress(ip, port, ""));
+        publishProgress(new ServerAddress(ip, port, null));
     }
 }

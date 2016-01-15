@@ -45,6 +45,10 @@ public class ThemeBackground extends View {
 
     public boolean isAnimating() { return mode == MODE.TURNING_ON || mode == MODE.TURNING_OFF; }
 
+    private boolean isPing() {
+        return foregroundColor == backgroundColor;
+    }
+
     public ThemeBackground(Context context) {
         super(context);
     }
@@ -98,7 +102,7 @@ public class ThemeBackground extends View {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
             if (mode != MODE.ON) mode = MODE.TURNING_ON;
             ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
-            animator.setDuration(timeout);
+            animator.setDuration(isPing() ? timeout * 2 : timeout);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
                 @Override
@@ -192,13 +196,13 @@ public class ThemeBackground extends View {
             final int cx = getWidth() / 2;
             final int cy = getHeight() / 2;
             final float radius = (float) (Math.sqrt(Math.pow(cx, 2) + Math.pow(cy, 2))) * scale;
-            final int alpha = (int) (100 - 100 * scale);
             paint.setColor(foregroundColor);
             canvas.drawCircle(cx, cy, radius, paint);
-            if (backgroundColor == foregroundColor && isActive()) {
+            if (isPing() && isActive()) {
+                final int alpha = (int) (100 - Math.pow(10 * scale, 2));
                 paint.setAntiAlias(true);
                 paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(2);
+                paint.setStrokeWidth(3);
                 paint.setColor(accentColor);
                 paint.setAlpha(alpha);
                 canvas.drawCircle(cx, cy, radius, paint);
