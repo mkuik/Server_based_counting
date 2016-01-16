@@ -108,7 +108,7 @@ public class ServerListAdapter extends BaseAdapter {
         final TextView title = (TextView) view.findViewById(R.id.text1);
         final TextView subtitle = (TextView) view.findViewById(R.id.text2);
         title.setText(item.name);
-        subtitle.setText(item.ip + " @ " + item.port);
+        subtitle.setText(item.ip + " : " + item.port);
         if (item.name == null) {
             Global.syncServerName(item, new Runnable() {
                 @Override

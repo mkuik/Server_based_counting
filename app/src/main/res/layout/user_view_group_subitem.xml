@@ -3,16 +3,16 @@
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingLeft="30dp"
-    android:paddingTop="15dp"
+    android:paddingTop="5dp"
     android:paddingRight="30dp"
-    android:paddingBottom="15dp">
+    android:paddingBottom="5dp">
 
     <CheckedTextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:checkMark="@drawable/abc_btn_check_material"
+        android:checkMark="?android:attr/listChoiceIndicatorMultiple"
         android:id="@+id/checkbox"
-        android:textSize="15dp"
+        android:textSize="14sp"
         android:gravity="center_vertical"/>
 
 </LinearLayout>

@@ -3,6 +3,6 @@
     android:insetLeft="15dp"
     android:insetRight="15dp">
     <shape>
-        <solid android:color="#30000000" />
+        <solid android:color="#15000000" />
     </shape>
 </inset>

@@ -23,7 +23,7 @@ public class ThemeButton extends Button {
     private float scale = 0;
     private int color = Color.BLACK;
     private int linewidth = 3;
-    private int timeout = 300;
+    private int timeout = 500;
     private Point pointOfCircleOrigin;
 
     public void setColor(int color) {
@@ -112,7 +112,7 @@ public class ThemeButton extends Button {
                 final int cy = pointOfCircleOrigin.y;
                 final float radius = (float) ((Math.sqrt(Math.pow(Math.max(cx, getWidth() - cx), 2)
                         + Math.pow(Math.max(cy, getHeight() - cy), 2))) * (scale));
-                final int alpha = (int) (100 - Math.pow(10 * scale, 2));
+                final int alpha = (int) (100 - 100 * scale);
                 final int x0 = linewidth / 2;
                 final int x1 = getWidth() - linewidth / 2;
                 final int y0 = x0;

@@ -25,7 +25,7 @@ public class LocalNetworkServerDetector extends AsyncTask<String, ServerAddress,
     final String tag = "Find sockets";
     final int timeout = 300;
     final int[] ip_range = {100, 120};
-    final int[] port_range = {4500, 4501};
+    final int[] port_range = {4500, 4501, 4502};
 
     public LocalNetworkServerDetector(final String ip) {
         baseIP = ip;

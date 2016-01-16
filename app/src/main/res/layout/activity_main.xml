@@ -10,65 +10,44 @@
     <dev.kuik.matthijs.serverbasedcounting.ThemeBackground
         android:id="@+id/theme_background"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_alignParentStart="false"
+        android:layout_height="match_parent"
         app:primaryColor="@color/header_background"
         app:scale="0.0" />
 
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:focusableInTouchMode="false"
-        android:scaleType="fitCenter"
-        android:layout_marginTop="10dp"/>
-
-    <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/pager"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/message_scroll_view"
-        android:layout_below="@+id/logo">
+        android:fitsSystemWindows="true"
+        android:gravity="center_horizontal">
 
-        <android.support.v4.view.PagerTitleStrip
-            android:id="@+id/pager_title_strip"
+        <ImageView
+            android:id="@+id/logo"
             android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:textColor="#fff"
-            android:paddingBottom="10dp"
-            android:paddingRight="10dp"
-            android:paddingLeft="10dp"
-            android:paddingTop="0dp" />
+            android:layout_height="80dp"
+            android:focusableInTouchMode="false"
+            android:scaleType="fitCenter"
+            android:layout_marginTop="@dimen/icon_statusbar_distance"/>
 
-        <!--<android.support.v4.view.PagerTabStrip-->
-        <!--android:id="@+id/pager_header"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="top"-->
-        <!--android:paddingBottom="4dp"-->
-        <!--android:paddingTop="4dp" />-->
+        <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/page_background"
+            android:layout_marginRight="@dimen/page_margin"
+            android:layout_marginLeft="@dimen/page_margin"
+            android:layout_marginBottom="@dimen/page_margin">
 
-    </android.support.v4.view.ViewPager>
+            <android.support.v4.view.PagerTitleStrip
+                android:id="@+id/pager_title_strip"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pege_title_strip_height"
+                android:paddingRight="@dimen/page_margin"
+                android:paddingLeft="@dimen/page_margin"
+                style="@style/viepagertitlestrip"/>
 
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/message_scroll_view"
-        android:layout_alignParentEnd="false"
-        android:layout_alignParentBottom="true"
-        android:fillViewport="false">
+        </android.support.v4.view.ViewPager>
 
-        <TextView
-            android:visibility="gone"
-            android:id="@+id/message"
-            style="@style/CatenaThemeWhite"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:paddingLeft="@dimen/text_margin"
-            android:paddingTop="@dimen/text_margin"
-            android:paddingRight="@dimen/text_margin"
-            android:paddingBottom="@dimen/text_margin" />
-    </HorizontalScrollView>
+    </LinearLayout>
 
 </RelativeLayout>

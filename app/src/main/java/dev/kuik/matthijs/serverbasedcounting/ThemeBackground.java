@@ -8,6 +8,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -22,7 +23,8 @@ public class ThemeBackground extends View {
     private int foregroundColor = defaultColor;
     private int backgroundColor = defaultColor;
     private float scale;
-    private int timeout = 500;
+    private int timeout = 1000;
+    private Point pointOfCircleOrigin;
     public enum MODE {
         OFF,
         TURNING_OFF,
@@ -33,6 +35,10 @@ public class ThemeBackground extends View {
 
     public boolean isActive() {
         return mode == MODE.ON || mode == MODE.TURNING_ON;
+    }
+
+    public void setPointOfCircleOrigin(Point pointOfCircleOrigin) {
+        this.pointOfCircleOrigin = pointOfCircleOrigin;
     }
 
     public MODE getMode() {
@@ -193,13 +199,17 @@ public class ThemeBackground extends View {
             canvas.drawColor(foregroundColor);
         } else {
             canvas.drawColor(isActive() ? backgroundColor : defaultColor);
-            final int cx = getWidth() / 2;
-            final int cy = getHeight() / 2;
-            final float radius = (float) (Math.sqrt(Math.pow(cx, 2) + Math.pow(cy, 2))) * scale;
+
+            if (pointOfCircleOrigin == null)
+                pointOfCircleOrigin = new Point(getWidth() / 2, getHeight() / 2);
+            final int cx = pointOfCircleOrigin.x;
+            final int cy = pointOfCircleOrigin.y;
+            final float radius = (float) ((Math.sqrt(Math.pow(Math.max(cx, getWidth() - cx), 2)
+                    + Math.pow(Math.max(cy, getHeight() - cy), 2))) * (scale));
+            final int alpha = (int) (100 - 100 * scale);
             paint.setColor(foregroundColor);
             canvas.drawCircle(cx, cy, radius, paint);
             if (isPing() && isActive()) {
-                final int alpha = (int) (100 - Math.pow(10 * scale, 2));
                 paint.setAntiAlias(true);
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(3);

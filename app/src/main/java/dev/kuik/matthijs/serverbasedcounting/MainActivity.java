@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,22 +31,18 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
 {
     DemoCollectionPagerAdapter mDemoCollectionPagerAdapter;
     ViewPager mViewPager;
-    TextView message;
     ImageView iconImageView;
     PagerTitleStrip title_strip;
     ThemeBackground theme;
-    HorizontalScrollView messageScrollView;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mDemoCollectionPagerAdapter = new DemoCollectionPagerAdapter(getSupportFragmentManager());
         mViewPager = (ViewPager) findViewById(R.id.pager);
-        message = (TextView) findViewById(R.id.message);
         iconImageView = (ImageView) findViewById(R.id.logo);
         title_strip = (PagerTitleStrip) findViewById(R.id.pager_title_strip);
         theme = (ThemeBackground) findViewById(R.id.theme_background);
-        messageScrollView = (HorizontalScrollView) findViewById(R.id.message_scroll_view);
         mViewPager.setAdapter(mDemoCollectionPagerAdapter);
 
         Global.getPrefrences(this);
@@ -63,6 +60,25 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
         super.onStop();
         Global.setPrefrences(this);
         Global.removeListener(this);
+    }
+
+    @Override
+    public void onWindowFocusChanged (boolean hasFocus){
+        super.onWindowFocusChanged(hasFocus);
+        if(hasFocus){
+            setRippleOrigin();
+        }
+    }
+
+    public void setRippleOrigin() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+            final int x = (iconImageView.getLeft() + iconImageView.getRight()) / 2;
+            final int y = (iconImageView.getTop() + iconImageView.getBottom()) / 2;
+            theme.setPointOfCircleOrigin(new Point(x, y));
+            Log.i("center", String.format("%d %d %d %d : %d %d", iconImageView.getTop(),
+                    iconImageView.getBottom(), iconImageView.getLeft(), iconImageView.getRight(),
+                    x, y));
+        }
     }
 
     public void setTheme(final Bitmap icon, final int color1, final int color2) {
@@ -91,14 +107,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
     }
 
     public void setThemeColor(final int color1, final int color2) {
-        messageScrollView.setBackgroundColor(color1);
-        message.setBackgroundColor(color1);
-        message.setTextColor(color2);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            int color = (color1 != Color.WHITE ? color1 : color2);
-            Window window = getWindow();
-            window.setNavigationBarColor(color);
-            window.setStatusBarColor(color);
             setTaskDescription(new ActivityManager.TaskDescription(null, null, color1));
         }
     }
@@ -122,7 +131,6 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
         } else {
             theme.activate(null);
         }
-        message.setText(response);
     }
 
     @Override
