@@ -22,6 +22,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     private ThemeButton submitButton;
     private ThemeButton incrementButton;
     private ThemeButton decrementButton;
+    private SwipeRefreshLayout swipeLayout;
 
     public CounterFragment() {
         // Required empty public constructor
@@ -107,7 +108,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
             decrementButton = (ThemeButton) view.findViewById(R.id.decrement_button);
             submitButton = (ThemeButton) view.findViewById(R.id.submit_button);
             message = (TextView) view.findViewById(R.id.message);
-            SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
+            swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
             swipeLayout.setOnRefreshListener(this);
             incrementButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -140,7 +141,17 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     @Override
     public void onRefresh() {
+        setRefreshing(true);
         Global.syncCounter();
+    }
+
+    public void setRefreshing(final boolean refreshing) {
+        swipeLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                swipeLayout.setRefreshing(refreshing);
+            }
+        });
     }
 
     @Override
@@ -166,6 +177,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     @Override
     public void OnCounterValueChanged(int counter, int max) {
+        setRefreshing(false);
         Global.setSubmitBufferValue(0);
         setCounterVariables();
         checkCounterRange();

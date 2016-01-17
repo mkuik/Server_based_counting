@@ -31,6 +31,14 @@ public class UserListAdapter extends BaseExpandableListAdapter {
     }
 
     public void addUser(final User user) {
+        for (int i = 0; i != users.size(); ++i) {
+            final User u = users.get(i);
+            if (u.getName().compareTo(user.getName()) == 0) {
+                users.remove(i);
+                users.add(i, user);
+                return;
+            }
+        }
         users.add(user);
     }
 

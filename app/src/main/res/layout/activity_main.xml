@@ -32,18 +32,12 @@
         <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/pager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/page_background"
-            android:layout_marginRight="@dimen/page_margin"
-            android:layout_marginLeft="@dimen/page_margin"
-            android:layout_marginBottom="@dimen/page_margin">
+            android:layout_height="match_parent">
 
             <android.support.v4.view.PagerTitleStrip
                 android:id="@+id/pager_title_strip"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/pege_title_strip_height"
-                android:paddingRight="@dimen/page_margin"
-                android:paddingLeft="@dimen/page_margin"
                 style="@style/viepagertitlestrip"/>
 
         </android.support.v4.view.ViewPager>

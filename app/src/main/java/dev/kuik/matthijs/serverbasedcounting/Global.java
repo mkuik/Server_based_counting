@@ -16,6 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,8 +36,6 @@ public class Global {
     public static List<Adapter> listeners = new ArrayList<>();
     public static List<Runnable> queue = new ArrayList<>();
     public static boolean hostConnectionActive = false;
-    public static String iconB64;
-    public static Bitmap iconBitmap;
     public static User user;
 
     public static void getPrefrences(Activity activity) {
@@ -44,7 +43,6 @@ public class Global {
             SharedPreferences preferences = activity.getPreferences(Context.MODE_PRIVATE);
             Global.color1 = preferences.getInt("color1", Color.BLACK);
             Global.color2 = preferences.getInt("color2", Color.WHITE);
-            iconB64 = preferences.getString("icon", null);
             final String jsonstr = preferences.getString("user", "");
             try {
                 JSONObject jsonobj = new JSONObject(jsonstr);
@@ -62,6 +60,7 @@ public class Global {
             Global.submit_value = preferences.getInt("subtotal", 0);
             Global.counter_max_value = preferences.getInt("max", 0);
             Global.setSubmitBufferValue(preferences.getInt("buffer", 0));
+            setHostBitmap(preferences.getString("icon", null));
         }
     }
 
@@ -73,25 +72,64 @@ public class Global {
         if (activity != null) {
             SharedPreferences preferences = activity.getPreferences(Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
-            editor.putInt("color1", Global.color1);
-            editor.putInt("color2", Global.color2);
-            editor.putString("icon", iconB64);
+            editor.putInt("color1", getColor1());
+            editor.putInt("color2", getColor2());
             try {
                 editor.putString("user", user.toJSON().toString());
             } catch (JSONException | NullPointerException e) {
                 Log.e("store user in pref", e.toString());
             }
-            if (Global.getHost() != null) {
-                editor.putString("ip", Global.getHost().ip);
-                editor.putInt("port", Global.getHost().port);
-                editor.putString("hostname", Global.getHost().name);
+            if (getHost() != null) {
+                editor.putString("ip", getHost().ip);
+                editor.putInt("port", getHost().port);
+                editor.putString("hostname", getHost().name);
+                editor.putString("icon", toBase64(getHost().getIcon()));
             }
-            editor.putInt("count", Global.counter_value);
-            editor.putInt("subtotal", Global.submit_value);
-            editor.putInt("max", Global.counter_max_value);
+            editor.putInt("count", getCounterValue());
+            editor.putInt("subtotal", getSubmitValue());
+            editor.putInt("max", getCounterMaxValue());
             editor.putInt("buffer", Global.getSubmitBufferValue());
             editor.commit();
         }
+    }
+
+    public static Bitmap toBitmap(final String base64) {
+        try {
+            byte[] bytes;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO) {
+                bytes = Base64.decode(base64, Base64.DEFAULT);
+            } else {
+                bytes = Base64api7.decode(base64, Base64api7.DEFAULT);
+            }
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        } catch (IndexOutOfBoundsException | IllegalArgumentException e) {
+            Log.e("Global.toBitmap", e.toString());
+        }
+        return null;
+    }
+
+    public static void setHostBitmap(final String base64) {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                getHost().setIcon(toBitmap(base64));
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                notifyTheme();
+            }
+        }.execute();
+    }
+
+    public static String toBase64(final Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream .toByteArray();
+        return Base64api7.encodeToString(byteArray, Base64.DEFAULT);
+
     }
 
     public static User getUser() {
@@ -244,10 +282,8 @@ public class Global {
                             final String color2String = jsonResponse.getString("color2");
                             if (color1String.compareTo("") != 0 && color2String.compareTo("") != 0) {
                                 setTheme(Color.parseColor(color1String), Color.parseColor(color2String));
-                                notifyTheme();
                             }
-                            iconB64 = jsonResponse.getString("icon");
-                            setBitmapIcon();
+                            setHostBitmap(jsonResponse.getString("icon"));
                         } catch (JSONException e) {
                             Log.e("sync theme response", e.toString());
                         }
@@ -333,38 +369,6 @@ public class Global {
         }
     }
 
-    public static void setBitmapIcon() {
-        if (iconB64 != null) {
-            AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
-                @Override
-                protected Bitmap doInBackground(Void... params) {
-                    try {
-                        byte[] bytes;
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO) {
-                            bytes = Base64.decode(iconB64, Base64.DEFAULT);
-                        } else {
-                            bytes = Base64api7.decode(iconB64, Base64api7.DEFAULT);
-                        }
-                        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    } catch (IndexOutOfBoundsException e) {
-                        Log.e("set header icon", e.toString());
-                    }
-                    return null;
-                }
-
-                @Override
-                protected void onPostExecute(final Bitmap bitmap) {
-                    super.onPostExecute(bitmap);
-                    iconBitmap = bitmap;
-                    Log.i("set bitmap icon", "end");
-                    notifyTheme();
-                    runFirstInQueue();
-                }
-            };
-            add(new ConvertToBitmapTask(iconB64, task));
-        }
-    }
-
     public static void syncServerName(final ServerAddress server, final Runnable post) {
         Log.i("task in queue", "get name " + server.toString());
         if (getHost() == null) return;
@@ -422,7 +426,7 @@ public class Global {
         Log.i("notify", "theme");
         for (Adapter adapter : listeners) {
             if (adapter != null) {
-                adapter.OnThemeChanged(iconBitmap, getColor1(), getColor2());
+                adapter.OnThemeChanged(getHost().getIcon(), getHost().getColor1(), getHost().getColor2());
             }
         }
     }

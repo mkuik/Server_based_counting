@@ -38,7 +38,7 @@ public class User {
         return json;
     }
 
-    public Integer getID() {
+    public int getID() {
         return id;
     }
 

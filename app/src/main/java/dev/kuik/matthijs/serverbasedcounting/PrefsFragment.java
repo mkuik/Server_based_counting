@@ -24,6 +24,15 @@ public class PrefsFragment extends PreferenceFragment {
     private Preference max;
 
     @Override
+    public View onCreateView(LayoutInflater paramLayoutInflater, ViewGroup paramViewGroup, Bundle paramBundle) {
+        View view = super.onCreateView(paramLayoutInflater, paramViewGroup, paramBundle);
+        view.setBackgroundResource(R.drawable.content_background);
+        final int i = (int)getResources().getDimension(R.dimen.page_margin);
+        view.setPadding(i, 0, i, i);
+        return view;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
         super.onCreate(savedInstanceState);

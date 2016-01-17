@@ -36,6 +36,15 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         onRefresh();
     }
 
+    public void setRefreshing(final boolean refreshing) {
+        swipeLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                swipeLayout.setRefreshing(refreshing);
+            }
+        });
+    }
+
     @Override
     public void onStop() {
         super.onStop();
@@ -67,6 +76,7 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     @Override
     public void onRefresh() {
+        setRefreshing(true);
         Global.syncUsers();
     }
 
@@ -97,8 +107,7 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     @Override
     public void OnUserListRecieved(List<User> users) {
-        swipeLayout.setRefreshing(false);
-        userlistadapter.clear();
+        setRefreshing(false);
         for (User u : users) userlistadapter.addUser(u);
         userlistadapter.notifyDataSetChanged();
     }

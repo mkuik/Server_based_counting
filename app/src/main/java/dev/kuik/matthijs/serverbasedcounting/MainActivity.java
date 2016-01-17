@@ -46,7 +46,6 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
         mViewPager.setAdapter(mDemoCollectionPagerAdapter);
 
         Global.getPrefrences(this);
-        Global.setBitmapIcon();
     }
 
     @Override
@@ -115,7 +114,6 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
     @Override
     public void OnHostAddressChanged(ServerAddress address) {
         theme.setBackgroundColor(theme.getForegroundColor());
-        Global.syncTheme();
         SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString("ip", address.ip);
@@ -127,7 +125,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
     @Override
     public void OnHostResponseRecieved(ServerAddress address, String response) {
         if (theme.getMode() != ThemeBackground.MODE.ON) {
-            setTheme(Global.iconBitmap, Global.getColor1(), Global.getColor2());
+            setTheme(address.getIcon(), address.getColor1(), address.getColor2());
         } else {
             theme.activate(null);
         }

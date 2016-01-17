@@ -1,5 +1,8 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
+import android.graphics.Bitmap;
+import android.graphics.Color;
+
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -13,10 +16,13 @@ import java.util.Comparator;
  */
 
 public class ServerAddress {
-    public String ip = "";
-    public InetAddress net;
-    public Integer port = 0;
+    public String ip;
+    public int port;
     public String name;
+    private int color1 = Color.BLACK;
+    private int color2 = Color.WHITE;
+    private Bitmap icon;
+
 
     ServerAddress(final String ip, final int port, final String name) {
         this.name = name;
@@ -25,38 +31,46 @@ public class ServerAddress {
     }
 
     public String toString() {
-        if (name == null || name.compareTo("") == 0)
-            return ip + ":" + port.toString();
-        else
-            return name;
+        return ip + ":" + port;
     }
 
     public void setName(final String name) {
         this.name = name;
     }
 
-    public String getHost() {
-        if (net != null && name != null) {
-            if (name.compareTo(ip) == 0) {
-                return ip;
-            } else {
-                return name + " @ " + ip;
-            }
-        } else {
-            return ip;
-        }
+    public int getColor1() {
+        return color1;
     }
 
+    public void setColor1(int color1) {
+        this.color1 = color1;
+    }
+
+    public int getColor2() {
+        return color2;
+    }
+
+    public void setColor2(int color2) {
+        this.color2 = color2;
+    }
+
+    public Bitmap getIcon() {
+        return icon;
+    }
+
+    public void setIcon(Bitmap icon) {
+        this.icon = icon;
+    }
+
+    public String getHost() {
+        return ip;
+    }
 
     public boolean equals(final ServerAddress address) {
-        return ip.compareTo(address.ip) == 0 && port == address.port;
+        return port == address.port && ip.compareTo(address.ip) == 0;
     }
 
-    public String getPort() {
-        if (port != null) {
-            return port.toString();
-        } else {
-            return "NA";
-        }
+    public int getPort() {
+        return port;
     }
 }

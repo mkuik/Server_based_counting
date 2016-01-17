@@ -1,11 +1,8 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
@@ -13,13 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class SelectServerFragment extends Fragment
         implements SwipeRefreshLayout.OnRefreshListener {
@@ -29,6 +21,7 @@ public class SelectServerFragment extends Fragment
     private static TextView message;
     public static final ServerListAdapter servers = new ServerListAdapter();
     private static SwipeRefreshLayout swipeLayout;
+    private ServerDetector detector;
 
     public SelectServerFragment() {
 
@@ -62,30 +55,32 @@ public class SelectServerFragment extends Fragment
         super.onStop();
     }
 
+    public void setRefreshing(final boolean refreshing) {
+        swipeLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                swipeLayout.setRefreshing(refreshing);
+            }
+        });
+    }
+
     public void scanNetwork() {
-        swipeLayout.setRefreshing(true);
-        servers.clear();
-        servers.notifyDataSetChanged();
+        if (detector != null) detector.cancel(true);
+        setRefreshing(true);
         final int ip = getIP();
         final String ipBase = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
-        LocalNetworkServerDetector scanner = new LocalNetworkServerDetector(ipBase) {
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                Log.i(tag, "scan network");
-            }
-
+        detector = new ServerDetector(ipBase) {
             @Override
             protected void onCancelled() {
                 super.onCancelled();
-                swipeLayout.setRefreshing(false);
+                setRefreshing(false);
                 Log.i(tag, "scan cancelled");
             }
 
             @Override
             protected void onPostExecute(Void ignore) {
                 super.onPostExecute(ignore);
-                swipeLayout.setRefreshing(false);
+                setRefreshing(false);
                 Log.i(tag, "scan finished");
             }
 
@@ -100,7 +95,7 @@ public class SelectServerFragment extends Fragment
                 Log.i(tag, "scan update");
             }
         };
-        scanner.execute("");
+        detector.execute();
     }
 
     public void newPort(final ServerAddress address) {
@@ -128,6 +123,7 @@ public class SelectServerFragment extends Fragment
                     Global.setHost((ServerAddress) servers.getItem(position));
                     Global.setUser(getActivity());
                     Global.notifyHost();
+                    Global.notifyTheme();
                 }
             });
         }

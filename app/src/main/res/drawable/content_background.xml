@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item
+        android:drawable="@drawable/page_color"
+        android:id="@+id/content_background"
+        android:top="0dp"
+        android:right="@dimen/page_margin"
+        android:bottom="@dimen/page_margin"
+        android:left="@dimen/page_margin" />
+</layer-list>

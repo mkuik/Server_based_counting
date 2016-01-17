@@ -1,7 +1,8 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="dev.kuik.matthijs.serverbasedcounting.SelectServerFragment">
+    tools:context="dev.kuik.matthijs.serverbasedcounting.SelectServerFragment"
+    style="@style/content_page">
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_container"
@@ -18,7 +19,7 @@
             android:layout_weight="1"
             android:dividerHeight="1px"
             android:divider="@drawable/seperator"
-            tools:listitem="@layout/server_address_list_item"/>
+            tools:listitem="@layout/listitem_2_lines_with_icon"/>
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
