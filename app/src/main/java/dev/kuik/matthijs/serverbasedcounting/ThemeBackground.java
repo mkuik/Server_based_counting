@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -22,37 +21,25 @@ public class ThemeBackground extends View {
     private int accentColor = Color.WHITE;
     private int foregroundColor = defaultColor;
     private int backgroundColor = defaultColor;
-    private float scale;
+    private float scale = 0;
+    private float ping_scale = 0;
     private int timeout = 1000;
-    private Point pointOfCircleOrigin;
-    public enum MODE {
-        OFF,
-        TURNING_OFF,
-        TURNING_ON,
-        ON,
-    };
-    private MODE mode = MODE.OFF;
+    private Point center;
+    private Paint paint = new Paint();
+    private boolean active = false;
+    private ValueAnimator animator;
+    private ValueAnimator ping_animator;
 
     public boolean isActive() {
-        return mode == MODE.ON || mode == MODE.TURNING_ON;
+        return scale > 0;
     }
 
-    public void setPointOfCircleOrigin(Point pointOfCircleOrigin) {
-        this.pointOfCircleOrigin = pointOfCircleOrigin;
+    public void setCenter(Point center) {
+        this.center = center;
     }
 
-    public MODE getMode() {
-        return mode;
-    }
-
-    public boolean isInactive() {
-        return mode == MODE.OFF || mode == MODE.TURNING_OFF;
-    }
-
-    public boolean isAnimating() { return mode == MODE.TURNING_ON || mode == MODE.TURNING_OFF; }
-
-    private boolean isPing() {
-        return foregroundColor == backgroundColor;
+    public boolean isGoingActive() {
+        return scale > 0 && scale < 1;
     }
 
     public ThemeBackground(Context context) {
@@ -71,6 +58,12 @@ public class ThemeBackground extends View {
         if (scale >= 0 && scale <= 1) {
             this.scale = scale;
             if (scale == 1) setBackgroundColor(getForegroundColor());
+        }
+    }
+
+    public void setPingScale(float scale) {
+        if (scale >= 0 && scale <= 1) {
+            this.ping_scale = scale;
         }
     }
 
@@ -103,12 +96,32 @@ public class ThemeBackground extends View {
         return defaultColor;
     }
 
-    public void activate(Animator.AnimatorListener listener) {
-        if (mode == MODE.TURNING_ON) return;
+    public void ping() {
+        Log.i("theme", "ping");
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-            if (mode != MODE.ON) mode = MODE.TURNING_ON;
-            ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
-            animator.setDuration(isPing() ? timeout * 2 : timeout);
+            if (ping_animator != null && ping_animator.isRunning()) ping_animator.cancel();
+            ping_animator = ValueAnimator.ofFloat(0, 1);
+            ping_animator.setDuration(timeout * 2);
+            ping_animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    Float value = (Float) (animation.getAnimatedValue());
+                    setPingScale(value);
+                    invalidate();
+                }
+            });
+            ping_animator.start();
+        }
+    }
+
+    public void activate() {
+        active = true;
+        Log.i("theme", "activate");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+            if (animator != null && animator.isRunning()) animator.cancel();
+            animator = ValueAnimator.ofFloat(0, 1);
+            animator.setDuration(timeout);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
                 @Override
@@ -116,27 +129,6 @@ public class ThemeBackground extends View {
                     Float value = (Float) (animation.getAnimatedValue());
                     setScale(value);
                     invalidate();
-                }
-            });
-            if (listener != null) animator.addListener(listener);
-            animator.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mode = MODE.ON;
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-
                 }
             });
             animator.start();
@@ -146,13 +138,13 @@ public class ThemeBackground extends View {
         }
     }
 
-    public void deactivate(Animator.AnimatorListener listener) {
-        if (mode == MODE.TURNING_OFF || mode == MODE.OFF) return;
+    public void deactivate() {
+        active = false;
+        Log.i("theme", "deactivate");
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-            mode = MODE.TURNING_OFF;
-            ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
+            if (animator != null && animator.isRunning()) animator.cancel();
+            animator = ValueAnimator.ofFloat(1, 0);
             animator.setDuration(timeout);
-            if (listener != null) animator.addListener(listener);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
                 @Override
@@ -160,26 +152,6 @@ public class ThemeBackground extends View {
                     Float value = (Float) (animation.getAnimatedValue());
                     setScale(value);
                     invalidate();
-                }
-            });
-            animator.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mode = MODE.OFF;
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-
                 }
             });
             animator.start();
@@ -192,31 +164,33 @@ public class ThemeBackground extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        Paint paint = new Paint();
-        if (scale <= 0) {
-            canvas.drawColor(isInactive() ? defaultColor : backgroundColor);
-        } else if (scale >= 1) {
-            canvas.drawColor(foregroundColor);
-        } else {
-            canvas.drawColor(isActive() ? backgroundColor : defaultColor);
+        paint.setAntiAlias(true);
+        if (center == null) center = new Point(getWidth() / 2, getHeight() / 2);
 
-            if (pointOfCircleOrigin == null)
-                pointOfCircleOrigin = new Point(getWidth() / 2, getHeight() / 2);
-            final int cx = pointOfCircleOrigin.x;
-            final int cy = pointOfCircleOrigin.y;
-            final float radius = (float) ((Math.sqrt(Math.pow(Math.max(cx, getWidth() - cx), 2)
-                    + Math.pow(Math.max(cy, getHeight() - cy), 2))) * (scale));
-            final int alpha = (int) (100 - 100 * scale);
-            paint.setColor(foregroundColor);
-            canvas.drawCircle(cx, cy, radius, paint);
-            if (isPing() && isActive()) {
-                paint.setAntiAlias(true);
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(3);
-                paint.setColor(accentColor);
-                paint.setAlpha(alpha);
-                canvas.drawCircle(cx, cy, radius, paint);
-            }
+        if (scale == 0) {
+            canvas.drawColor(active ? getBackgroundColor() : getDefaultColor());
+        } else if (scale == 1) {
+            canvas.drawColor(getForegroundColor());
+        } else {
+            canvas.drawColor(isActive() ? getBackgroundColor() : getDefaultColor());
+            final float radius = (float) ((Math.sqrt(Math.pow(Math.max(center.x, getWidth() - center.x), 2)
+                    + Math.pow(Math.max(center.y, getHeight() - center.y), 2))) * (scale));
+            paint.setAlpha(255);
+            paint.setColor(getForegroundColor());
+            paint.setStyle(Paint.Style.FILL);
+            canvas.drawCircle(center.x, center.y, radius, paint);
+            return;
+        }
+        
+        if (ping_scale != 0 && ping_scale != 1) {
+            final float radius = (float) ((Math.sqrt(Math.pow(Math.max(center.x, getWidth() - center.x), 2)
+                    + Math.pow(Math.max(center.y, getHeight() - center.y), 2))) * (ping_scale));
+            final int alpha = (int) (255 - 255 * ping_scale);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(1);
+            paint.setColor(getAccentColor());
+            paint.setAlpha(alpha);
+            canvas.drawCircle(center.x, center.y, radius, paint);
         }
     }
 }

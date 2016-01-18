@@ -2,25 +2,16 @@ package dev.kuik.matthijs.serverbasedcounting;
 
 import android.animation.Animator;
 import android.app.ActivityManager;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.PagerTitleStrip;
 import android.support.v4.view.ViewPager;
-import android.util.Base64;
 import android.util.Log;
-import android.view.Window;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,8 +20,8 @@ import java.util.List;
 
 public class MainActivity extends FragmentActivity implements Global.Adapter
 {
-    DemoCollectionPagerAdapter mDemoCollectionPagerAdapter;
-    ViewPager mViewPager;
+    ContentPager contentPager;
+    ViewPager viewPager;
     ImageView iconImageView;
     PagerTitleStrip title_strip;
     ThemeBackground theme;
@@ -38,14 +29,16 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mDemoCollectionPagerAdapter = new DemoCollectionPagerAdapter(getSupportFragmentManager());
-        mViewPager = (ViewPager) findViewById(R.id.pager);
+        contentPager = new ContentPager(getSupportFragmentManager());
+        viewPager = (ViewPager) findViewById(R.id.pager);
         iconImageView = (ImageView) findViewById(R.id.logo);
         title_strip = (PagerTitleStrip) findViewById(R.id.pager_title_strip);
         theme = (ThemeBackground) findViewById(R.id.theme_background);
-        mViewPager.setAdapter(mDemoCollectionPagerAdapter);
+        viewPager.setAdapter(contentPager);
 
         Global.getPrefrences(this);
+        contentPager.notifyDataSetChanged();
+        Global.notifyTheme();
     }
 
     @Override
@@ -73,7 +66,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
             final int x = (iconImageView.getLeft() + iconImageView.getRight()) / 2;
             final int y = (iconImageView.getTop() + iconImageView.getBottom()) / 2;
-            theme.setPointOfCircleOrigin(new Point(x, y));
+            theme.setCenter(new Point(x, y));
             Log.i("center", String.format("%d %d %d %d : %d %d", iconImageView.getTop(),
                     iconImageView.getBottom(), iconImageView.getLeft(), iconImageView.getRight(),
                     x, y));
@@ -81,68 +74,55 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
     }
 
     public void setTheme(final Bitmap icon, final int color1, final int color2) {
+        theme.setForegroundColor(color1);
         iconImageView.setImageBitmap(icon);
-        title_strip.setTextColor(color2);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-            theme.activate(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {}
-
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    setThemeColor(color1, color2);
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {}
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {}
-            });
-        } else {
-            theme.activate(null);
-            setThemeColor(color1, color2);
-        }
+        theme.activate();
+        setThemeColor(color1, color2);
     }
 
     public void setThemeColor(final int color1, final int color2) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setTaskDescription(new ActivityManager.TaskDescription(null, null, color1));
         }
+        title_strip.setTextColor(color2);
+        theme.setAccentColor(color2);
     }
 
     @Override
     public void OnHostAddressChanged(ServerAddress address) {
         theme.setBackgroundColor(theme.getForegroundColor());
-        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("ip", address.ip);
-        editor.putInt("port", address.port);
-        editor.putString("hostname", address.name);
-        editor.commit();
     }
 
     @Override
     public void OnHostResponseRecieved(ServerAddress address, String response) {
-        if (theme.getMode() != ThemeBackground.MODE.ON) {
-            setTheme(address.getIcon(), address.getColor1(), address.getColor2());
+        if (theme.isActive()) {
+            if (!theme.isGoingActive()) {
+                theme.ping();
+            }
         } else {
-            theme.activate(null);
+            setTheme(address.getIcon(), address.getColor1(), address.getColor2());
+        }
+
+        try {
+            JSONObject jsonResponse = new JSONObject(response);
+            final User user = new User(jsonResponse.getJSONObject("user"));
+            Global.setUser(user);
+        } catch (JSONException e) {
+            Log.i("get user from response", e.toString());
         }
     }
 
     @Override
     public void OnHostResponseLost(ServerAddress address, String response) {
-        if (!theme.isInactive()) {
+        if (theme.isActive()) {
             iconImageView.setImageBitmap(null);
             setThemeColor(Color.BLACK, Color.WHITE);
-            theme.deactivate(null);
+            theme.deactivate();
         }
     }
 
     @Override
     public void OnThemeChanged(Bitmap icon, int color1, int color2) {
-        theme.setForegroundColor(color1);
         setTheme(icon, color1, color2);
     }
 
@@ -154,6 +134,11 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
     @Override
     public void OnUserListRecieved(List<User> users) {
 
+    }
+
+    @Override
+    public void OnUserChanged(User user) {
+        contentPager.notifyDataSetChanged();
     }
 }
 

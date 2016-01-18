@@ -27,7 +27,8 @@
             android:layout_height="80dp"
             android:focusableInTouchMode="false"
             android:scaleType="fitCenter"
-            android:layout_marginTop="@dimen/icon_statusbar_distance"/>
+            android:layout_marginTop="@dimen/icon_statusbar_distance"
+            android:layout_marginBottom="5dp"/>
 
         <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/pager"

@@ -2,6 +2,10 @@ package dev.kuik.matthijs.serverbasedcounting;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.net.InetAddress;
@@ -28,6 +32,24 @@ public class ServerAddress {
         this.name = name;
         this.ip = ip;
         this.port = port;
+    }
+
+    ServerAddress(JSONObject json) throws JSONException {
+        this.name = json.getString("name");
+        this.ip = json.getString("ip");
+        this.port = json.getInt("port");
+        this.color1 = json.getInt("color1");
+        this.color2 = json.getInt("color2");
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("ip", ip);
+        json.put("port", port);
+        json.put("name", name);
+        json.put("color1", color1);
+        json.put("color2", color2);
+        return json;
     }
 
     public String toString() {

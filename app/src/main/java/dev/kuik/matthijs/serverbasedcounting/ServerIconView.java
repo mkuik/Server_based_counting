@@ -13,27 +13,39 @@ import android.widget.ImageView;
 public class ServerIconView extends ImageView {
 
     private Paint paint = new Paint();
+    private Point center;
 
     public ServerIconView(Context context) {
         super(context);
+        init();
     }
 
     public ServerIconView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init();
     }
 
     public ServerIconView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init();
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        center = new Point(w / 2, h / 2);
+    }
+
+    private void init() {
+        paint.setAntiAlias(true);
     }
 
     public void setColor(int color) {
         paint.setColor(color);
-        paint.setAntiAlias(true);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Point center = new Point(getWidth() / 2, getHeight() / 2);
         final float radius = Math.min(center.x, center.y);
         canvas.drawCircle(center.x, center.y, radius, paint);
         super.onDraw(canvas);

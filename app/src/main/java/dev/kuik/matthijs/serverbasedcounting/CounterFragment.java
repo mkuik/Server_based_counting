@@ -79,21 +79,15 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Global.addListener(this);
+        onRefresh();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Global.addListener(this);
-        onRefresh();
         checkCounterRange();
         setTheme();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        Global.removeListener(this);
     }
 
     @Override
@@ -137,6 +131,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void onDetach() {
         super.onDetach();
+        Global.removeListener(this);
     }
 
     @Override
@@ -146,18 +141,19 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     public void setRefreshing(final boolean refreshing) {
-        swipeLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                swipeLayout.setRefreshing(refreshing);
-            }
-        });
+        if (swipeLayout != null) {
+            swipeLayout.post(new Runnable() {
+                @Override
+                public void run() {
+                    swipeLayout.setRefreshing(refreshing);
+                }
+            });
+        }
     }
 
     @Override
     public void OnHostAddressChanged(ServerAddress address) {
         onRefresh();
-
     }
 
     @Override
@@ -185,6 +181,11 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     @Override
     public void OnUserListRecieved(List<User> users) {
+
+    }
+
+    @Override
+    public void OnUserChanged(User user) {
 
     }
 }

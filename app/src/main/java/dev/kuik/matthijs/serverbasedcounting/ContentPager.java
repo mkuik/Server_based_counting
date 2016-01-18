@@ -7,8 +7,8 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 // Since this is an object collection, use a FragmentStatePagerAdapter,
 // and NOT a FragmentPagerAdapter.
-public class DemoCollectionPagerAdapter extends FragmentPagerAdapter {
-    public DemoCollectionPagerAdapter(FragmentManager fm) {
+public class ContentPager extends FragmentPagerAdapter {
+    public ContentPager(FragmentManager fm) {
         super(fm);
     }
 
@@ -22,11 +22,16 @@ public class DemoCollectionPagerAdapter extends FragmentPagerAdapter {
             case 1:
                 fragment = new CounterFragment();
                 break;
-            case 3:
-                fragment = new AdminFragment();
-                break;
-            default:
+            case 2:
                 fragment = new PrefsFragment();
+                break;
+            case 3:
+                if (Global.getUser() != null && Global.getUser().isAdmīn()) {
+                    fragment = new AdminFragment();
+                    break;
+                }
+            default:
+                fragment = new ErrorFragment();
                 break;
         }
         return fragment;
@@ -34,7 +39,12 @@ public class DemoCollectionPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 4;
+        if (Global.getUser() != null && Global.getUser().isAdmīn()) {
+            return 4;
+        } else {
+            return 3;
+        }
+
     }
 
     @Override
@@ -51,8 +61,10 @@ public class DemoCollectionPagerAdapter extends FragmentPagerAdapter {
                 title = "Settings";
                 break;
             case 3:
-                title = "Admin";
-                break;
+                if (Global.getUser() != null && Global.getUser().isAdmīn()) {
+                    title = "Admin";
+                    break;
+                }
             default:
                 title = "null";
                 break;

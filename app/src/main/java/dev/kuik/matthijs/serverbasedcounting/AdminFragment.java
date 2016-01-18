@@ -113,6 +113,11 @@ public class AdminFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     }
 
     @Override
+    public void OnUserChanged(User user) {
+
+    }
+
+    @Override
     public void OnOptionClick(User user) {
         Global.syncUserRights(user);
         try {

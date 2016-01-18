@@ -57,7 +57,7 @@ public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
                 publishProgress(server);
             }
         } catch (IOException e) {
-//            Log.e(tag, e.toString());
+            Log.i(tag, e.toString());
         } catch (JSONException e) {
             Log.i(tag, e.toString());
         }

@@ -31,7 +31,6 @@ public class SelectServerFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         servers.setContext(getActivity());
-
     }
 
     @Override
@@ -47,12 +46,10 @@ public class SelectServerFragment extends Fragment
     @Override
     public void onResume() {
         super.onResume();
-        onRefresh();
-    }
 
-    @Override
-    public void onStop() {
-        super.onStop();
+        if (servers.isEmpty()) {
+            onRefresh();
+        }
     }
 
     public void setRefreshing(final boolean refreshing) {
@@ -121,7 +118,7 @@ public class SelectServerFragment extends Fragment
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Global.setHost((ServerAddress) servers.getItem(position));
-                    Global.setUser(getActivity());
+                    Global.setUser(new User(getActivity()));
                     Global.notifyHost();
                     Global.notifyTheme();
                 }
