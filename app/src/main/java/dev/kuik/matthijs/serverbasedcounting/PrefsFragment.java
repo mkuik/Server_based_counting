@@ -173,11 +173,13 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
     }
 
     private void showTimeoutDialog() {
+        int timeout = 300;
         final View view = getActivity().getLayoutInflater().inflate(R.layout.timeout_dialog, null);
         final SeekBar inputField = (SeekBar) view.findViewById(R.id.timeout_dialog_seekbar);
         final TextView message = (TextView) view.findViewById(R.id.timeout_dialog_message);
         final String instruction = message.getText().toString();
-        message.setText(instruction + ": " + 300 + "ms");
+        inputField.setProgress(timeout);
+        message.setText(instruction + ": " + timeout + "ms");
 
         inputField.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
