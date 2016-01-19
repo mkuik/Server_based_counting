@@ -8,7 +8,7 @@
     android:paddingBottom="14dp"
     android:gravity="center_vertical">
 
-    <dev.kuik.matthijs.serverbasedcounting.ServerIconView
+    <dev.kuik.matthijs.serverbasedcounting.IconView
         android:layout_width="40dp"
         android:layout_height="match_parent"
         android:id="@+id/icon" />

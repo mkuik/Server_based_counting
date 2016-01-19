@@ -1,7 +1,0 @@
-<resources>
-    <declare-styleable name="ThemeBackground">
-        <attr name="primaryColor" format="color" />
-        <attr name="secondaryColor" format="color" />
-        <attr name="scale" format="float" />
-    </declare-styleable>
-</resources>

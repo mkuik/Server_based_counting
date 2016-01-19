@@ -18,7 +18,8 @@
             android:dividerHeight="1px"
             android:divider="@drawable/seperator"
             android:childDivider="@drawable/child_seperator"
-            android:groupIndicator="@null"/>
+            android:groupIndicator="@null"
+            tools:listitem="@layout/user_view_group"/>
 
     </android.support.v4.widget.SwipeRefreshLayout>
 

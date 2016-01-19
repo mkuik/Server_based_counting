@@ -1,5 +1,6 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
+import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.wifi.WifiManager;
@@ -30,13 +31,14 @@ import java.util.concurrent.TimeUnit;
 public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
 
     String baseIP;
-    final String tag = "Find sockets";
-    final int timeout = 200;
+    final String tag = "ServerDetector";
+    final int timeout = 300;
     final int[] ip_range = {0, 255};
     final int port = 4500;
 
-    public ServerDetector(final String ip) {
-        baseIP = ip;
+    public ServerDetector(Context context) {
+        final int ip = ServerAddress.getIP(context);
+        baseIP = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
     }
 
     public void testAddress(final String ip, final int port) {
@@ -57,23 +59,33 @@ public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
                 publishProgress(server);
             }
         } catch (IOException e) {
-            Log.i(tag, e.toString());
+            Log.i(tag, "Can't connect to " + ip + ":" + port);
         } catch (JSONException e) {
-            Log.i(tag, e.toString());
+            Log.e(tag, e.toString());
         }
     }
 
     @Override
     protected Void doInBackground(Void... params) {
-        ExecutorService executor = Executors.newFixedThreadPool(3);
-        for (int ipAddress = ip_range[0]; ipAddress < ip_range[1]; ipAddress++) {
-            final String ip = baseIP + Integer.toString(ipAddress);
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        if (Global.getHost() != null && Global.getHost().ip.compareTo("") != 0) {
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    testAddress(ip, port);
+                    testAddress(Global.getHost().ip, port);
                 }
             });
+        }
+        for (int ipAddress = ip_range[0]; ipAddress < ip_range[1]; ipAddress++) {
+            final String ip = baseIP + Integer.toString(ipAddress);
+            if (Global.getHost().ip.compareTo(ip) != 0) {
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        testAddress(ip, port);
+                    }
+                });
+            }
         }
         executor.shutdown();
         try {
@@ -81,7 +93,6 @@ public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
         } catch (InterruptedException ignored) {
 
         }
-        Log.e("ip detector", "end");
         return null;
     }
 

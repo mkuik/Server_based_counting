@@ -90,7 +90,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
 
     @Override
     public void OnHostAddressChanged(ServerAddress address) {
-        theme.setBackgroundColor(theme.getForegroundColor());
+
     }
 
     @Override
@@ -101,14 +101,6 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
             }
         } else {
             setTheme(address.getIcon(), address.getColor1(), address.getColor2());
-        }
-
-        try {
-            JSONObject jsonResponse = new JSONObject(response);
-            final User user = new User(jsonResponse.getJSONObject("user"));
-            Global.setUser(user);
-        } catch (JSONException e) {
-            Log.i("get user from response", e.toString());
         }
     }
 

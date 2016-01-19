@@ -1,34 +1,43 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.graphics.BitmapFactory;
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
-import android.preference.Preference;
-import android.support.v4.preference.PreferenceFragment;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowInsets;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.Comparator;
 
-public class PrefsFragment extends PreferenceFragment {
+public class PrefsFragment extends Fragment implements AdapterView.OnItemClickListener {
 
-    private Preference ip;
-    private Preference port;
-    private Preference admin;
-    private Preference count;
-    private Preference max;
+    final String tag = "PrefsFragment";
+    private ListItem ip;
+    private ListItem port;
+    private ListItem timeout;
+    private ListItem admin;
+    private ListItem count;
+    private ListItem max;
+    private ListAdapter options;
 
     @Override
-    public View onCreateView(LayoutInflater paramLayoutInflater, ViewGroup paramViewGroup, Bundle paramBundle) {
-        View view = super.onCreateView(paramLayoutInflater, paramViewGroup, paramBundle);
-        view.setBackgroundResource(R.drawable.content_background);
-        final int i = (int)getResources().getDimension(R.dimen.page_margin);
-        view.setPadding(i, 0, i, i);
+    public View onCreateView(LayoutInflater inflater, ViewGroup viewGroup, Bundle bundle) {
+        View view = inflater.inflate(R.layout.fragment_preferences, viewGroup, false);
+        if (view != null) {
+            ListView listView = (ListView) view.findViewById(R.id.preference_listview);
+            listView.setAdapter(options);
+            listView.setOnItemClickListener(this);
+        }
         return view;
     }
 
@@ -37,62 +46,38 @@ public class PrefsFragment extends PreferenceFragment {
         // TODO Auto-generated method stub
         super.onCreate(savedInstanceState);
 
-        // Load the preferences from an XML resource
-        addPreferencesFromResource(R.xml.preferences);
-        ip = findPreference("ip");
-        port = findPreference("port");
-        count = findPreference("count");
-        max = findPreference("max");
+        options = new ListAdapter();
 
-        ip.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object obj) {
-                final String ip = (String) obj;
-                Log.i("ip pref", ip);
-                if (validIP(ip)) {
-                    Global.setHost(new ServerAddress(ip, Global.getHost().port, ""));
-                    Global.notifyHost();
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
+        ip = new ListItem(getActivity());
+        ip.setTitle(getResources().getString(R.string.ip_address_preference_title));
+        ip.setSubtitle(getResources().getString(R.string.ip_address_preference_subtitle));
 
-        port.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object obj) {
-                    final int port = Integer.parseInt((String) obj);
-                    Log.i("port pref", "" + port);
-                    if (validPort(port)) {
-                        Global.setHost(new ServerAddress(Global.getHost().ip, port, ""));
-                        Global.notifyHost();
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-            });
-            count.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object obj) {
-                    final int number = Integer.parseInt((String) obj);
-                    Log.i("count pref", "" + number);
-                    Global.setCounterValue(number);
-                    Global.notifyCounter();
-                    return true;
-                }
-            });
-            count.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object obj) {
-                    final int number = Integer.parseInt((String) obj);
-                    Log.i("max pref", "" + number);
-                    Global.setCounterMaxValue(number);
-                    Global.notifyCounter();
-                    return true;
-                }
-            });
+        port = new ListItem(getActivity());
+        port.setTitle(getResources().getString(R.string.port_address_preference_title));
+        port.setSubtitle(getResources().getString(R.string.port_address_preference_subtitle));
+
+        timeout = new ListItem(getActivity());
+        timeout.setTitle(getResources().getString(R.string.timeout_preference_title));
+        timeout.setSubtitle(getResources().getString(R.string.timeout_preference_subtitle));
+
+        admin = new ListItem(getActivity());
+        admin.setTitle(getResources().getString(R.string.admin_rights_preference_title));
+        admin.setSubtitle(getResources().getString(R.string.admin_rights_preference_title));
+
+        count = new ListItem(getActivity());
+        count.setTitle(getResources().getString(R.string.count_preference_title));
+        count.setSubtitle(getResources().getString(R.string.count_preference_subtitle));
+
+        max = new ListItem(getActivity());
+        max.setTitle(getResources().getString(R.string.max_preference_title));
+        max.setSubtitle(getResources().getString(R.string.max_preference_subtitle));
+
+        options.add(ip);
+        options.add(port);
+        options.add(timeout);
+        options.add(admin);
+        options.add(count);
+        options.add(max);
     }
 
     public static boolean validIP(final String ip) {
@@ -124,5 +109,208 @@ public class PrefsFragment extends PreferenceFragment {
 
     public static boolean validPort(final int port) {
         return port >= 0 && port <= 65535;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        if (view == ip) {
+            showIPDialog();
+        } else if (view == port) {
+            showPortDialog();
+        } else if (view == timeout) {
+            showTimeoutDialog();
+        } else if (view == admin) {
+            showAdminDialog();
+        } else if (view == count) {
+            showCountDialog();
+        } else if (view == max) {
+            showMaxDialog();
+        }
+    }
+
+    private void showIPDialog() {
+        final View view = getActivity().getLayoutInflater().inflate(R.layout.ip_dialog, null);
+        final EditText ipField = (EditText) view.findViewById(R.id.ip_address_dialog_field);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final String text = ipField.getText().toString();
+                Log.i(tag, "from ip dialog: " + text);
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
+    }
+
+    private void showPortDialog() {
+        final View view = getActivity().getLayoutInflater().inflate(R.layout.port_dialog, null);
+        final EditText inputField = (EditText) view.findViewById(R.id.poro_address_dialog_field);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final String text = inputField.getText().toString();
+                Log.i(tag, "from port dialog: " + text);
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
+    }
+
+    private void showTimeoutDialog() {
+        final View view = getActivity().getLayoutInflater().inflate(R.layout.timeout_dialog, null);
+        final SeekBar inputField = (SeekBar) view.findViewById(R.id.timeout_dialog_seekbar);
+        final TextView message = (TextView) view.findViewById(R.id.timeout_dialog_message);
+        final String instruction = message.getText().toString();
+        message.setText(instruction + ": " + 300 + "ms");
+
+        inputField.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                message.setText(instruction + ": " + progress + "ms");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final int text = inputField.getProgress();
+                Log.i(tag, "from timeout dialog: " + text);
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
+    }
+
+    private void showAdminDialog() {
+        final View view = getActivity().getLayoutInflater().inflate(R.layout.admin_dialog, null);
+        final EditText inputField = (EditText) view.findViewById(R.id.admin_dialog_field);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final String text = inputField.getText().toString();
+                Log.i(tag, "from admin dialog: " + text);
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
+    }
+
+    private void showCountDialog() {
+        final View view = getActivity().getLayoutInflater().inflate(R.layout.count_dialog, null);
+        final EditText inputField = (EditText) view.findViewById(R.id.count_dialog_field);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final String text = inputField.getText().toString();
+                Log.i(tag, "from count dialog: " + text);
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
+    }
+
+    private void showMaxDialog() {
+        final View view = getActivity().getLayoutInflater().inflate(R.layout.max_dialog, null);
+        final EditText inputField = (EditText) view.findViewById(R.id.max_dialog_field);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final String text = inputField.getText().toString();
+                Log.i(tag, "from max dialog: " + text);
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
+    }
+
+    class ListAdapter extends BaseAdapter {
+
+        final String tag = "PreferenceListAdapter";
+        ArrayList<ListItem> options;
+
+        public ListAdapter() {
+            options = new ArrayList<>();
+        }
+
+        public void add(final ListItem option) {
+            options.add(option);
+        }
+
+        @Override
+        public int getCount() {
+            return options.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return options.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(final int position, View view, ViewGroup parent) {
+            return options.get(position);
+        }
     }
 }

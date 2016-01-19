@@ -10,46 +10,30 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class SelectServerFragment extends Fragment
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+public class ServerDetectorFragment extends Fragment
         implements SwipeRefreshLayout.OnRefreshListener {
 
-    private static final String tag = "SelectServerFragment";
-    private static ListView serversListView;
-    private static TextView message;
-    public static final ServerListAdapter servers = new ServerListAdapter();
-    private static SwipeRefreshLayout swipeLayout;
+    private final String tag = "SelectServerFragment";
+    public final ServerListAdapter servers = new ServerListAdapter();
+    private SwipeRefreshLayout swipeLayout;
     private ServerDetector detector;
 
-    public SelectServerFragment() {
+    public ServerDetectorFragment() {
 
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        servers.setContext(getActivity());
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-    }
-
-    public int getIP() {
-        final WifiManager wifiMgr = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
-        return wifiMgr.getConnectionInfo().getIpAddress();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-        if (servers.isEmpty()) {
-            onRefresh();
-        }
+        if (servers.isEmpty()) onRefresh();
     }
 
     public void setRefreshing(final boolean refreshing) {
@@ -64,32 +48,21 @@ public class SelectServerFragment extends Fragment
     public void scanNetwork() {
         if (detector != null) detector.cancel(true);
         setRefreshing(true);
-        final int ip = getIP();
-        final String ipBase = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
-        detector = new ServerDetector(ipBase) {
+        detector = new ServerDetector(getActivity()) {
             @Override
             protected void onCancelled() {
                 super.onCancelled();
                 setRefreshing(false);
-                Log.i(tag, "scan cancelled");
             }
-
             @Override
             protected void onPostExecute(Void ignore) {
                 super.onPostExecute(ignore);
                 setRefreshing(false);
-                Log.i(tag, "scan finished");
             }
-
             @Override
             protected void onProgressUpdate(ServerAddress... values) {
                 super.onProgressUpdate(values);
-                final ServerAddress address = values[0];
-                if (address != null) {
-                    message.setText(address.toString());
-                    newPort(address);
-                }
-                Log.i(tag, "scan update");
+                newPort(values[0]);
             }
         };
         detector.execute();
@@ -108,9 +81,8 @@ public class SelectServerFragment extends Fragment
 
         View view = inflater.inflate(R.layout.fragment_select_server, container, false);
         if (view != null) {
-            serversListView = (ListView) view.findViewById(R.id.serverList);
+            ListView serversListView = (ListView) view.findViewById(R.id.serverList);
             swipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
-            message = (TextView) view.findViewById(R.id.message);
             swipeLayout.setOnRefreshListener(this);
             serversListView.setAdapter(servers);
 
@@ -135,5 +107,68 @@ public class SelectServerFragment extends Fragment
     @Override
     public void onRefresh() {
         scanNetwork();
+    }
+
+    class ServerListAdapter extends BaseAdapter {
+
+        final String tag = "ServerListAdapter";
+        ArrayList<ServerAddress> serverAddressItems;
+        ListItemWithIcon container;
+
+        public ServerListAdapter() {
+            serverAddressItems = new ArrayList<>();
+        }
+
+        public void add(final ServerAddress address) {
+            for (int i = 0; i!= serverAddressItems.size(); ++i) {
+                final ServerAddress item = serverAddressItems.get(i);
+                if (item.port == address.port && item.ip.compareTo(address.ip) == 0) {
+                    Log.i(tag, address.toString() + " equals " + item.toString());
+                    serverAddressItems.remove(i);
+                    serverAddressItems.add(i, address);
+                    return;
+                }
+            }
+            serverAddressItems.add(address);
+            Collections.sort(serverAddressItems, new SortByIP());
+        }
+
+        public void clear() {
+            serverAddressItems.clear();
+        }
+
+        @Override
+        public int getCount() {
+            return serverAddressItems.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return serverAddressItems.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(final int position, View view, ViewGroup parent) {
+            final ServerAddress item = serverAddressItems.get(position);
+            container = new ListItemWithIcon(getActivity());
+            container.setTitle(item.name);
+            container.setSubtitle(item.ip + " : " + item.port);
+            container.setIconBackground(item.getColor1());
+            container.setIcon(item.getIcon());
+            return container;
+
+        }
+
+        public class SortByIP implements Comparator<ServerAddress> {
+            @Override
+            public int compare(ServerAddress lhs, ServerAddress rhs) {
+                return lhs.ip.compareTo(rhs.ip);
+            }
+        }
     }
 }

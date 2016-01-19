@@ -10,9 +10,7 @@
     <dev.kuik.matthijs.serverbasedcounting.ThemeBackground
         android:id="@+id/theme_background"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:primaryColor="@color/header_background"
-        app:scale="0.0" />
+        android:layout_height="match_parent" />
 
     <LinearLayout
         android:orientation="vertical"

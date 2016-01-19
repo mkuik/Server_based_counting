@@ -2,69 +2,21 @@
     <string name="app_name">Server based counting</string>
     <string name="title_activity_define_server">Search network</string>
     <string name="settings_title">Settings</string>
-    <string name="Add_custom_server_button">Add server</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_settings">Settings</string>
-
-    <!-- Strings related to Settings -->
-
-    <!-- Example General settings -->
-    <string name="pref_header_general">General</string>
-
-    <string name="pref_title_social_recommendations">Enable social recommendations</string>
-    <string name="pref_description_social_recommendations">Recommendations for people to contact
-        based on your message history
-    </string>
-
-    <string name="pref_title_display_name">Display name</string>
-    <string name="pref_default_display_name">John Smith</string>
-
-    <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
-    <string-array name="pref_example_list_titles">
-        <item>Always</item>
-        <item>When possible</item>
-        <item>Never</item>
-    </string-array>
-    <string-array name="pref_example_list_values">
-        <item>1</item>
-        <item>0</item>
-        <item>-1</item>
-    </string-array>
-
-    <!-- Example settings for Data & Sync -->
-    <string name="pref_header_data_sync">Data &amp; sync</string>
-
-    <string name="pref_title_sync_frequency">Sync frequency</string>
-    <string-array name="pref_sync_frequency_titles">
-        <item>15 minutes</item>
-        <item>30 minutes</item>
-        <item>1 hour</item>
-        <item>3 hours</item>
-        <item>6 hours</item>
-        <item>Never</item>
-    </string-array>
-    <string-array name="pref_sync_frequency_values">
-        <item>15</item>
-        <item>30</item>
-        <item>60</item>
-        <item>180</item>
-        <item>360</item>
-        <item>-1</item>
-    </string-array>
-
     <string name="pref_title_system_sync_settings">System sync settings</string>
-
-    <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Notifications</string>
-
-    <string name="pref_title_new_message_notifications">New message notifications</string>
-
-    <string name="pref_title_ringtone">Ringtone</string>
-    <string name="pref_ringtone_silent">Silent</string>
-
-    <string name="pref_title_vibrate">Vibrate</string>
     <string name="title_activity_main">Count</string>
     <string name="title_activity_counter_actitity">CounterActitity</string>
+    <string name="ip_address_preference_subtitle">Provide your server ip adress</string>
+    <string name="ip_address_preference_title">IP Adress</string>
+    <string name="port_address_preference_title">Port</string>
+    <string name="port_address_preference_subtitle">Provide your server port adress</string>
+    <string name="timeout_preference_title">Timeout</string>
+    <string name="timeout_preference_subtitle">Change the server detector socket timeout</string>
+    <string name="admin_rights_preference_title">Admin privileges</string>
+    <string name="admin_rights_preference_subtitle">Get admin functionality</string>
+    <string name="count_preference_title">Count</string>
+    <string name="count_preference_subtitle">Override the count variable</string>
+    <string name="max_preference_title">Max</string>
+    <string name="max_preference_subtitle">Override the max variable</string>
 </resources>

@@ -1,7 +1,9 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -94,5 +96,10 @@ public class ServerAddress {
 
     public int getPort() {
         return port;
+    }
+
+    public static int getIP(Context context) {
+        final WifiManager wifiMgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        return wifiMgr.getConnectionInfo().getIpAddress();
     }
 }

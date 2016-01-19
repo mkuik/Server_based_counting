@@ -10,22 +10,22 @@ import android.widget.ImageView;
 /**
  * Created by Matthijs on 17/01/16.
  */
-public class ServerIconView extends ImageView {
+public class IconView extends ImageView {
 
     private Paint paint = new Paint();
     private Point center;
 
-    public ServerIconView(Context context) {
+    public IconView(Context context) {
         super(context);
         init();
     }
 
-    public ServerIconView(Context context, AttributeSet attrs) {
+    public IconView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public ServerIconView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public IconView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }

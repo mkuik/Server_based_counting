@@ -385,6 +385,14 @@ public class Global {
     }
 
     public static void notifyResponse(final String response) {
+
+        try {
+            JSONObject jsonResponse = new JSONObject(response);
+            final User user = new User(jsonResponse.getJSONObject("user"));
+            Global.setUser(user);
+        } catch (JSONException e) {
+            Log.i("get user from response", e.toString());
+        }
         Log.i("notify", "response " + response);
         for (Adapter adapter : listeners) {
             if (adapter != null)
