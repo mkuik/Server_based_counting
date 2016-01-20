@@ -35,6 +35,15 @@ public class Global {
     public static boolean hostConnectionActive = false;
     private static ServerAddress host;
     private static User user;
+    private static int detector_timeout;
+
+    public static int getDetector_timeout() {
+        return detector_timeout;
+    }
+
+    public static void setDetector_timeout(int detector_timeout) {
+        Global.detector_timeout = detector_timeout;
+    }
 
     public static void getPrefrences(Activity activity) {
         if (activity != null) {
@@ -57,6 +66,7 @@ public class Global {
             Global.submit_value = preferences.getInt("subtotal", 0);
             Global.counter_max_value = preferences.getInt("max", 0);
             Global.setSubmitBufferValue(preferences.getInt("buffer", 0));
+            Global.detector_timeout = preferences.getInt("timeout", 300);
         }
     }
 
@@ -81,6 +91,7 @@ public class Global {
             editor.putInt("subtotal", getSubmitValue());
             editor.putInt("max", getCounterMaxValue());
             editor.putInt("buffer", Global.getSubmitBufferValue());
+            editor.putInt("timeout", Global.getDetector_timeout());
             editor.commit();
         }
     }
@@ -345,6 +356,99 @@ public class Global {
             add(new ServerTask(jsonCommand.toString(), serverCommunicator));
         } catch (JSONException e) {
             Log.e("sync users", e.toString());
+        }
+    }
+
+    public static void overrideCounter(final int value) {
+        Log.i("task in queue", "override counter");
+        if (getHost() == null) return;
+        final JSONObject jsonCommand = new JSONObject();
+        try {
+            jsonCommand.put("user", user.toJSON());
+            jsonCommand.put("set_count", value);
+            jsonCommand.put("count", getCounterValue());
+            final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
+                @Override
+                protected void onPostExecute(String jsonString) {
+                    super.onPostExecute(jsonString);
+                    if (jsonString == null) {
+                        notifyLost("response is null");
+                    } else if (jsonString.compareTo("") == 0) {
+                        notifyLost("response is empty");
+                    } else {
+                        try {
+                            JSONObject json = new JSONObject(jsonString);
+                            setCounterValue(json.getInt("count"));
+                        } catch (JSONException e) {}
+                        notifyResponse(jsonString);
+                        notifyCounter();
+                    }
+                    runFirstInQueue();
+                }
+            };
+            add(new ServerTask(jsonCommand.toString(), serverCommunicator));
+        } catch (JSONException e) {
+            Log.e("override counter", e.toString());
+        }
+    }
+
+    public static void overrideMax(final int value) {
+        Log.i("task in queue", "override max");
+        if (getHost() == null) return;
+        final JSONObject jsonCommand = new JSONObject();
+        try {
+            jsonCommand.put("user", user.toJSON());
+            jsonCommand.put("set_max", value);
+            jsonCommand.put("max", getCounterMaxValue());
+            final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
+                @Override
+                protected void onPostExecute(String jsonString) {
+                    super.onPostExecute(jsonString);
+                    if (jsonString == null) {
+                        notifyLost("response is null");
+                    } else if (jsonString.compareTo("") == 0) {
+                        notifyLost("response is empty");
+                    } else {
+                        try {
+                            JSONObject json = new JSONObject(jsonString);
+                            setCounterMaxValue(json.getInt("max"));
+                        } catch (JSONException e) {}
+                        notifyResponse(jsonString);
+                        notifyCounter();
+                    }
+                    runFirstInQueue();
+                }
+            };
+            add(new ServerTask(jsonCommand.toString(), serverCommunicator));
+        } catch (JSONException e) {
+            Log.e("override max", e.toString());
+        }
+    }
+
+    public static void getAdmin(final String password) {
+        Log.i("task in queue", "override max");
+        if (getHost() == null) return;
+        final JSONObject jsonCommand = new JSONObject();
+        try {
+            jsonCommand.put("user", user.toJSON());
+            jsonCommand.put("set_admin", password);
+            final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
+                @Override
+                protected void onPostExecute(String jsonString) {
+                    super.onPostExecute(jsonString);
+                    if (jsonString == null) {
+                        notifyLost("response is null");
+                    } else if (jsonString.compareTo("") == 0) {
+                        notifyLost("response is empty");
+                    } else {
+                        notifyResponse(jsonString);
+                    }
+                    runFirstInQueue();
+                }
+            };
+            add(new ServerTask(jsonCommand.toString(), serverCommunicator));
+        } catch (JSONException e) {
+            Log.e("override max", e.toString());
         }
     }
 

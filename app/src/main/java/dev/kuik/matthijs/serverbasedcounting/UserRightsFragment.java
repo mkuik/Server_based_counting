@@ -128,30 +128,22 @@ public class UserRightsFragment extends Fragment implements SwipeRefreshLayout.O
 
     class UserListAdapter extends BaseExpandableListAdapter {
 
-        List<User> users;
+        final List<User> users = new ArrayList<>();
 
-        public UserListAdapter() {
-            users = new ArrayList<>();
-        }
-
-        public UserListAdapter(List<User> list) {
-            users = list;
-        }
+        public UserListAdapter() {}
 
         public void addUser(final User user) {
-            for (int i = 0; i != users.size(); ++i) {
-                final User u = users.get(i);
-                if (u.getName().compareTo(user.getName()) == 0) {
-                    users.remove(i);
-                    users.add(i, user);
-                    return;
+            synchronized (users) {
+                for (int i = 0; i != users.size(); ++i) {
+                    final User u = users.get(i);
+                    if (u.getName().compareTo(user.getName()) == 0) {
+                        users.remove(i);
+                        users.add(i, user);
+                        return;
+                    }
                 }
+                users.add(user);
             }
-            users.add(user);
-        }
-
-        public void clear() {
-            users.clear();
         }
 
         @Override

@@ -2,7 +2,6 @@ package dev.kuik.matthijs.serverbasedcounting;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.graphics.BitmapFactory;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,7 +16,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 
 public class PrefsFragment extends Fragment implements AdapterView.OnItemClickListener {
 
@@ -131,6 +129,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
     private void showIPDialog() {
         final View view = getActivity().getLayoutInflater().inflate(R.layout.ip_dialog, null);
         final EditText ipField = (EditText) view.findViewById(R.id.ip_address_dialog_field);
+        ipField.setText(Global.getHost().ip);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setView(view);
@@ -138,6 +137,12 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             public void onClick(DialogInterface dialog, int id) {
                 final String text = ipField.getText().toString();
                 Log.i(tag, "from ip dialog: " + text);
+                if (validIP(text)) {
+                    ServerAddress address = new ServerAddress(text, Global.getHost().port, "");
+                    Global.setHost(address);
+                    Global.syncTheme();
+                    Global.notifyHost();
+                }
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -153,13 +158,20 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
     private void showPortDialog() {
         final View view = getActivity().getLayoutInflater().inflate(R.layout.port_dialog, null);
         final EditText inputField = (EditText) view.findViewById(R.id.poro_address_dialog_field);
+        inputField.setText(Integer.toString(Global.getHost().port));
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setView(view);
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                final String text = inputField.getText().toString();
-                Log.i(tag, "from port dialog: " + text);
+                final int port = Integer.valueOf(inputField.getText().toString());
+                Log.i(tag, "from port dialog: " + port);
+                if (validPort(port)) {
+                    ServerAddress address = new ServerAddress(Global.getHost().ip, port, "");
+                    Global.setHost(address);
+                    Global.syncTheme();
+                    Global.notifyHost();
+                }
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -202,8 +214,9 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         builder.setView(view);
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                final int text = inputField.getProgress();
-                Log.i(tag, "from timeout dialog: " + text);
+                final int timeout = inputField.getProgress();
+                Log.i(tag, "from timeout dialog: " + timeout);
+                Global.setDetector_timeout(timeout);
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -226,6 +239,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             public void onClick(DialogInterface dialog, int id) {
                 final String text = inputField.getText().toString();
                 Log.i(tag, "from admin dialog: " + text);
+                Global.getAdmin(text);
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -241,6 +255,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
     private void showCountDialog() {
         final View view = getActivity().getLayoutInflater().inflate(R.layout.count_dialog, null);
         final EditText inputField = (EditText) view.findViewById(R.id.count_dialog_field);
+        inputField.setText(Global.getCounterValue().toString());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setView(view);
@@ -248,6 +263,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             public void onClick(DialogInterface dialog, int id) {
                 final String text = inputField.getText().toString();
                 Log.i(tag, "from count dialog: " + text);
+                Global.overrideCounter(Integer.valueOf(text));
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -263,6 +279,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
     private void showMaxDialog() {
         final View view = getActivity().getLayoutInflater().inflate(R.layout.max_dialog, null);
         final EditText inputField = (EditText) view.findViewById(R.id.max_dialog_field);
+        inputField.setText(Global.getCounterMaxValue().toString());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setView(view);
@@ -270,6 +287,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             public void onClick(DialogInterface dialog, int id) {
                 final String text = inputField.getText().toString();
                 Log.i(tag, "from max dialog: " + text);
+                Global.overrideMax(Integer.valueOf(text));
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -285,14 +303,14 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
     class ListAdapter extends BaseAdapter {
 
         final String tag = "PreferenceListAdapter";
-        ArrayList<ListItem> options;
+        final ArrayList<ListItem> options = new ArrayList<>();
 
-        public ListAdapter() {
-            options = new ArrayList<>();
-        }
+        public ListAdapter() { }
 
         public void add(final ListItem option) {
-            options.add(option);
+            synchronized (options) {
+                options.add(option);
+            }
         }
 
         @Override

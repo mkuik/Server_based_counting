@@ -49,6 +49,7 @@ public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
             Log.i(tag, "connected to " + ip + " " + port);
             final JSONObject meta = new JSONObject(read(socket));
             final int nServers = meta.getInt("servers_size");
+            Log.i(tag, ip + " has " + nServers + " servers");
             for (int i = 0; i != nServers; ++i) {
                 final JSONObject json = meta.getJSONObject("server#" + i);
                 ServerAddress server = new ServerAddress(ip, json.getInt("port"),
@@ -59,7 +60,7 @@ public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
                 publishProgress(server);
             }
         } catch (IOException e) {
-            Log.i(tag, "Can't connect to " + ip + ":" + port);
+            Log.i(tag, "Can't connect to " + ip + ":" + port + " (" + e.toString() + ")");
         } catch (JSONException e) {
             Log.e(tag, e.toString());
         }
@@ -71,21 +72,18 @@ public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
         if (Global.getHost() != null && Global.getHost().ip.compareTo("") != 0) {
             executor.submit(new Runnable() {
                 @Override
-                public void run() {
-                    testAddress(Global.getHost().ip, port);
+                public void run() {testAddress(Global.getHost().ip, port);
                 }
             });
         }
         for (int ipAddress = ip_range[0]; ipAddress < ip_range[1]; ipAddress++) {
             final String ip = baseIP + Integer.toString(ipAddress);
-            if (Global.getHost().ip.compareTo(ip) != 0) {
-                executor.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        testAddress(ip, port);
-                    }
-                });
-            }
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    testAddress(ip, port);
+                }
+            });
         }
         executor.shutdown();
         try {

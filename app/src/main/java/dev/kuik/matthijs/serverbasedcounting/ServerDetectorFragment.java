@@ -47,17 +47,27 @@ public class ServerDetectorFragment extends Fragment
 
     public void scanNetwork() {
         if (detector != null) detector.cancel(true);
-        setRefreshing(true);
         detector = new ServerDetector(getActivity()) {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                setRefreshing(true);
+                Log.i(tag, "start detector " + this.toString());
+            }
+
             @Override
             protected void onCancelled() {
                 super.onCancelled();
                 setRefreshing(false);
+                detector = null;
+                Log.i(tag, "cancel detector " + this.toString());
             }
             @Override
             protected void onPostExecute(Void ignore) {
                 super.onPostExecute(ignore);
                 setRefreshing(false);
+                detector = null;
+                Log.i(tag, "stop detector " + this.toString());
             }
             @Override
             protected void onProgressUpdate(ServerAddress... values) {
@@ -70,8 +80,6 @@ public class ServerDetectorFragment extends Fragment
 
     public void newPort(final ServerAddress address) {
         servers.add(address);
-        servers.notifyDataSetChanged();
-        Log.i(address.getHost(), "new address " + address.toString());
     }
 
     @Override
@@ -112,25 +120,28 @@ public class ServerDetectorFragment extends Fragment
     class ServerListAdapter extends BaseAdapter {
 
         final String tag = "ServerListAdapter";
-        ArrayList<ServerAddress> serverAddressItems;
+        final ArrayList<ServerAddress> serverAddressItems = new ArrayList<>();
         ListItemWithIcon container;
 
-        public ServerListAdapter() {
-            serverAddressItems = new ArrayList<>();
-        }
+        public ServerListAdapter() {}
 
         public void add(final ServerAddress address) {
-            for (int i = 0; i!= serverAddressItems.size(); ++i) {
-                final ServerAddress item = serverAddressItems.get(i);
-                if (item.port == address.port && item.ip.compareTo(address.ip) == 0) {
-                    Log.i(tag, address.toString() + " equals " + item.toString());
-                    serverAddressItems.remove(i);
-                    serverAddressItems.add(i, address);
-                    return;
+            synchronized (serverAddressItems) {
+                for (int i = 0; i != serverAddressItems.size(); ++i) {
+                    final ServerAddress item = serverAddressItems.get(i);
+                    if (item.port == address.port && item.ip.compareTo(address.ip) == 0) {
+                        serverAddressItems.remove(i);
+                        serverAddressItems.add(i, address);
+                        notifyDataSetChanged();
+                        Log.i(tag, "update server " + address.toString());
+                        return;
+                    }
                 }
+                Log.i(tag, "new server " + address.toString());
+                serverAddressItems.add(address);
+                Collections.sort(serverAddressItems, new SortByIP());
             }
-            serverAddressItems.add(address);
-            Collections.sort(serverAddressItems, new SortByIP());
+            notifyDataSetChanged();
         }
 
         public void clear() {
