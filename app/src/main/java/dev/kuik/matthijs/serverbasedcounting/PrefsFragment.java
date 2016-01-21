@@ -2,6 +2,7 @@ package dev.kuik.matthijs.serverbasedcounting;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,10 +15,12 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class PrefsFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class PrefsFragment extends Fragment implements AdapterView.OnItemClickListener, Global.Adapter {
 
     final String tag = "PrefsFragment";
     private ListItem ip;
@@ -43,6 +46,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
     public void onCreate(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
         super.onCreate(savedInstanceState);
+        Global.addListener(this);
 
         options = new ListAdapter();
 
@@ -78,6 +82,12 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         options.add(max);
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Global.removeListener(this);
+    }
+
     public static boolean validIP(final String ip) {
         try {
             if ( ip == null || ip.compareTo("") == 0 ) {
@@ -104,6 +114,8 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             return false;
         }
     }
+
+
 
     public static boolean validPort(final int port) {
         return port >= 0 && port <= 65535;
@@ -262,8 +274,17 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 final String text = inputField.getText().toString();
-                Log.i(tag, "from count dialog: " + text);
-                Global.overrideCounter(Integer.valueOf(text));
+                Log.i(tag, "from max dialog: " + text);
+                try {
+                    int count = Integer.valueOf(text);
+                    if (count >= 0) {
+                        Global.overrideCounter(count);
+                    } else {
+                        Toast.makeText(getActivity(), "Count override can't be below 0", Toast.LENGTH_LONG).show();
+                    }
+                } catch (NumberFormatException ignore) {
+                    Toast.makeText(getActivity(), "Max override is too high. Use a number below " + Integer.MAX_VALUE, Toast.LENGTH_SHORT).show();
+                }
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -287,7 +308,16 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             public void onClick(DialogInterface dialog, int id) {
                 final String text = inputField.getText().toString();
                 Log.i(tag, "from max dialog: " + text);
-                Global.overrideMax(Integer.valueOf(text));
+                try {
+                    int max = Integer.valueOf(text);
+                    if (max >= 0) {
+                        Global.overrideMax(max);
+                    } else {
+                        Toast.makeText(getActivity(), "Max override can't be below 0", Toast.LENGTH_LONG).show();
+                    }
+                } catch (NumberFormatException ignore) {
+                    Toast.makeText(getActivity(), "Max override is too high. Use a number below " + Integer.MAX_VALUE, Toast.LENGTH_SHORT).show();
+                }
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -298,6 +328,41 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         // Create the AlertDialog object and return it
         builder.create();
         builder.show();
+    }
+
+    @Override
+    public void OnHostAddressChanged(ServerAddress address) {
+
+    }
+
+    @Override
+    public void OnHostResponseRecieved(ServerAddress address, String response) {
+
+    }
+
+    @Override
+    public void OnHostResponseLost(ServerAddress address, String response) {
+
+    }
+
+    @Override
+    public void OnThemeChanged(Bitmap icon, int color1, int color2) {
+
+    }
+
+    @Override
+    public void OnCounterValueChanged(int counter, int max) {
+
+    }
+
+    @Override
+    public void OnUserListRecieved(List<User> users) {
+
+    }
+
+    @Override
+    public void OnUserChanged(User user) {
+        options.notifyDataSetChanged();
     }
 
     class ListAdapter extends BaseAdapter {
@@ -315,7 +380,11 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
 
         @Override
         public int getCount() {
-            return options.size();
+            if (Global.getUser().isAdmīn()) {
+                return options.size();
+            } else {
+                return options.size() - 2;
+            }
         }
 
         @Override
