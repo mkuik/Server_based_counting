@@ -123,6 +123,14 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
             });
 
+            counter.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    Global.overrideCounter(getActivity());
+                    return true;
+                }
+            });
+
             setCounterVariables();
         }
         return view;

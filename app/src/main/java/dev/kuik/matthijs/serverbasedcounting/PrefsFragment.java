@@ -132,9 +132,9 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         } else if (view == admin) {
             showAdminDialog();
         } else if (view == count) {
-            showCountDialog();
+            Global.overrideCounter(getActivity());
         } else if (view == max) {
-            showMaxDialog();
+            Global.overrideMax(getActivity());
         }
     }
 
@@ -252,72 +252,6 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
                 final String text = inputField.getText().toString();
                 Log.i(tag, "from admin dialog: " + text);
                 Global.getAdmin(text);
-            }
-        });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User cancelled the dialog
-            }
-        });
-        // Create the AlertDialog object and return it
-        builder.create();
-        builder.show();
-    }
-
-    private void showCountDialog() {
-        final View view = getActivity().getLayoutInflater().inflate(R.layout.count_dialog, null);
-        final EditText inputField = (EditText) view.findViewById(R.id.count_dialog_field);
-        inputField.setText(Global.getCounterValue().toString());
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setView(view);
-        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                final String text = inputField.getText().toString();
-                Log.i(tag, "from max dialog: " + text);
-                try {
-                    int count = Integer.valueOf(text);
-                    if (count >= 0) {
-                        Global.overrideCounter(count);
-                    } else {
-                        Toast.makeText(getActivity(), "Count override can't be below 0", Toast.LENGTH_LONG).show();
-                    }
-                } catch (NumberFormatException ignore) {
-                    Toast.makeText(getActivity(), "Max override is too high. Use a number below " + Integer.MAX_VALUE, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User cancelled the dialog
-            }
-        });
-        // Create the AlertDialog object and return it
-        builder.create();
-        builder.show();
-    }
-
-    private void showMaxDialog() {
-        final View view = getActivity().getLayoutInflater().inflate(R.layout.max_dialog, null);
-        final EditText inputField = (EditText) view.findViewById(R.id.max_dialog_field);
-        inputField.setText(Global.getCounterMaxValue().toString());
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setView(view);
-        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                final String text = inputField.getText().toString();
-                Log.i(tag, "from max dialog: " + text);
-                try {
-                    int max = Integer.valueOf(text);
-                    if (max >= 0) {
-                        Global.overrideMax(max);
-                    } else {
-                        Toast.makeText(getActivity(), "Max override can't be below 0", Toast.LENGTH_LONG).show();
-                    }
-                } catch (NumberFormatException ignore) {
-                    Toast.makeText(getActivity(), "Max override is too high. Use a number below " + Integer.MAX_VALUE, Toast.LENGTH_SHORT).show();
-                }
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {

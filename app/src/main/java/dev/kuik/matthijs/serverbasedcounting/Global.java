@@ -3,7 +3,9 @@ package dev.kuik.matthijs.serverbasedcounting;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +13,9 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -392,6 +397,42 @@ public class Global {
         }
     }
 
+    public static void overrideCounter(final Activity activity) {
+        if (activity == null || !user.isAdmīn()) {
+            return;
+        }
+        final View view = activity.getLayoutInflater().inflate(R.layout.count_dialog, null);
+        final EditText inputField = (EditText) view.findViewById(R.id.count_dialog_field);
+        inputField.setText(Global.getCounterValue().toString());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final String text = inputField.getText().toString();
+                Log.i("override count", "from count dialog: " + text);
+                try {
+                    int count = Integer.valueOf(text);
+                    if (count >= 0) {
+                        Global.overrideCounter(count);
+                    } else {
+                        Toast.makeText(activity, "Count override can't be below 0", Toast.LENGTH_LONG).show();
+                    }
+                } catch (NumberFormatException ignore) {
+                    Toast.makeText(activity, "Count override is too high. Use a number below " + Integer.MAX_VALUE, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
+    }
+
     public static void overrideMax(final int value) {
         Log.i("task in queue", "override max");
         if (getHost() == null) return;
@@ -423,6 +464,42 @@ public class Global {
         } catch (JSONException e) {
             Log.e("override max", e.toString());
         }
+    }
+
+    public static void overrideMax(final Activity activity) {
+        if (activity == null || !user.isAdmīn()) {
+            return;
+        }
+        final View view = activity.getLayoutInflater().inflate(R.layout.max_dialog, null);
+        final EditText inputField = (EditText) view.findViewById(R.id.max_dialog_field);
+        inputField.setText(Global.getCounterMaxValue().toString());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final String text = inputField.getText().toString();
+                Log.i("override max", "from max dialog: " + text);
+                try {
+                    int max = Integer.valueOf(text);
+                    if (max >= 0) {
+                        Global.overrideMax(max);
+                    } else {
+                        Toast.makeText(activity, "Max override can't be below 0", Toast.LENGTH_LONG).show();
+                    }
+                } catch (NumberFormatException ignore) {
+                    Toast.makeText(activity, "Max override is too high. Use a number below " + Integer.MAX_VALUE, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
     }
 
     public static void getAdmin(final String password) {
