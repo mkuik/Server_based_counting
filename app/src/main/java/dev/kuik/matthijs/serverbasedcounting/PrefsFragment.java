@@ -27,6 +27,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
     private ListItem port;
     private ListItem timeout;
     private ListItem admin;
+    private ListItem status;
     private ListItem count;
     private ListItem max;
     private ListAdapter options;
@@ -66,6 +67,10 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         admin.setTitle(getResources().getString(R.string.admin_rights_preference_title));
         admin.setSubtitle(getResources().getString(R.string.admin_rights_preference_title));
 
+        status = new ListItem(getActivity());
+        status.setTitle(getResources().getString(R.string.status_title));
+        status.setSubtitle(getResources().getString(R.string.status_subtitle));
+
         count = new ListItem(getActivity());
         count.setTitle(getResources().getString(R.string.count_preference_title));
         count.setSubtitle(getResources().getString(R.string.count_preference_subtitle));
@@ -78,6 +83,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         options.add(port);
         options.add(timeout);
         options.add(admin);
+        options.add(status);
         options.add(count);
         options.add(max);
     }
@@ -98,7 +104,9 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             showTimeoutDialog();
         } else if (view == admin) {
             showAdminDialog();
-        } else if (view == count) {
+        } else if (view == status) {
+            Global.setStatus(getActivity());
+        }else if (view == count) {
             Global.overrideCounter(getActivity());
         } else if (view == max) {
             Global.overrideMax(getActivity());
@@ -247,6 +255,11 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         options.notifyDataSetChanged();
     }
 
+    @Override
+    public void OnStatusChanged(String status) {
+
+    }
+
     class ListAdapter extends BaseAdapter {
 
         final String tag = "PreferenceListAdapter";
@@ -265,7 +278,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             if (Global.getUser().isAdmīn()) {
                 return options.size();
             } else {
-                return options.size() - 2;
+                return options.size() - 3;
             }
         }
 

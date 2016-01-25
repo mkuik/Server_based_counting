@@ -30,4 +30,6 @@
     </string-array>
 
     <string name="teller_openweek_ip">85.144.65.242</string>
+    <string name="status_title">Status</string>
+    <string name="status_subtitle">Change the server status text</string>
 </resources>

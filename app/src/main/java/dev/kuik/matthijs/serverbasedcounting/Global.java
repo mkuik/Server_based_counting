@@ -223,6 +223,7 @@ public class Global {
             jsonCommand.put("user", user.toJSON());
             jsonCommand.put("max", 0);
             jsonCommand.put("count", 0);
+            jsonCommand.put("status", "");
             final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
                 @Override
                 protected void onPostExecute(String jsonString) {
@@ -239,7 +240,9 @@ public class Global {
                             JSONObject jsonResponse = new JSONObject(jsonString);
                             setCounterValue(jsonResponse.getInt("count"));
                             setCounterMaxValue(jsonResponse.getInt("max"));
+                            setStatus(jsonResponse.getString("status"));
                             notifyCounter();
+                            notifyStatus();
                         } catch (JSONException e) {
                             Log.e("sync counter response", e.toString());
                         }
@@ -502,6 +505,60 @@ public class Global {
         builder.show();
     }
 
+    public static void setStatus(final Activity activity) {
+        if (activity == null || !user.isAdmīn()) {
+            return;
+        }
+        final View view = activity.getLayoutInflater().inflate(R.layout.status_dialog, null);
+        final EditText inputField = (EditText) view.findViewById(R.id.status_dialog_field);
+        inputField.setText(Global.getHost().getStatus());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setView(view);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                setStatus(inputField.getText().toString());
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, null);
+        // Create the AlertDialog object and return it
+        builder.create();
+        builder.show();
+    }
+
+    public static void setStatus(final String value) {
+        Log.i("task in queue", "override max");
+        if (getHost() == null) return;
+        final JSONObject jsonCommand = new JSONObject();
+        try {
+            jsonCommand.put("user", user.toJSON());
+            jsonCommand.put("set_status", value);
+            jsonCommand.put("status", "");
+            final ServerCommunicator serverCommunicator = new ServerCommunicator(getHost()) {
+                @Override
+                protected void onPostExecute(String jsonString) {
+                    super.onPostExecute(jsonString);
+                    if (jsonString == null) {
+                        notifyLost("response is null");
+                    } else if (jsonString.compareTo("") == 0) {
+                        notifyLost("response is empty");
+                    } else {
+                        try {
+                            JSONObject json = new JSONObject(jsonString);
+                            getHost().setStatus(json.getString("status"));
+                            notifyStatus();
+                        } catch (JSONException e) {}
+                        notifyResponse(jsonString);
+                    }
+                    runFirstInQueue();
+                }
+            };
+            add(new ServerTask(jsonCommand.toString(), serverCommunicator));
+        } catch (JSONException e) {
+            Log.e("override max", e.toString());
+        }
+    }
+
     public static void getAdmin(final String password) {
         Log.i("task in queue", "override max");
         if (getHost() == null) return;
@@ -613,6 +670,14 @@ public class Global {
         }
     }
 
+    public static void notifyStatus() {
+        Log.i("notify", "status " + getHost().toString());
+        for (Adapter adapter : listeners) {
+            if (adapter != null)
+                adapter.OnStatusChanged(getHost().getStatus());
+        }
+    }
+
     public interface Adapter {
         void OnHostAddressChanged(ServerAddress address);
         void OnHostResponseRecieved(ServerAddress address, String response);
@@ -621,6 +686,7 @@ public class Global {
         void OnCounterValueChanged(int counter, int max);
         void OnUserListRecieved(List<User> users);
         void OnUserChanged(final User user);
+        void OnStatusChanged(final String status);
     }
 }
 

@@ -196,4 +196,9 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     public void OnUserChanged(User user) {
 
     }
+
+    @Override
+    public void OnStatusChanged(String status) {
+        message.setText(status);
+    }
 }

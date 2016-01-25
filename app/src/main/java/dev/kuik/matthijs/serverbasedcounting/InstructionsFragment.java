@@ -187,6 +187,11 @@ public class InstructionsFragment extends Fragment implements Global.Adapter, Vi
     }
 
     @Override
+    public void OnStatusChanged(String status) {
+
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.sendfeedback_button:

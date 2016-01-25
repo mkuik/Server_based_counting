@@ -117,6 +117,11 @@ public class UserRightsFragment extends Fragment implements SwipeRefreshLayout.O
 
     }
 
+    @Override
+    public void OnStatusChanged(String status) {
+
+    }
+
     public void OnOptionClick(User user) {
         Global.syncUserRights(user);
         try {

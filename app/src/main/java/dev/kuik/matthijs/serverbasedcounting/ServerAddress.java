@@ -25,6 +25,7 @@ public class ServerAddress {
     public String ip;
     public int port;
     public String name;
+    private String status;
     private int color1 = Color.BLACK;
     private int color2 = Color.WHITE;
     private Bitmap icon;
@@ -36,12 +37,21 @@ public class ServerAddress {
         this.port = port;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     ServerAddress(JSONObject json) throws JSONException {
         this.name = json.getString("name");
         this.ip = json.getString("ip");
         this.port = json.getInt("port");
         this.color1 = json.getInt("color1");
         this.color2 = json.getInt("color2");
+        this.status = json.getString("status");
     }
 
     public JSONObject toJSON() throws JSONException {
@@ -51,6 +61,7 @@ public class ServerAddress {
         json.put("name", name);
         json.put("color1", color1);
         json.put("color2", color2);
+        json.put("status", status);
         return json;
     }
 

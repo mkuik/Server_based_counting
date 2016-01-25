@@ -38,6 +38,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
 
         Global.getPrefrences(this);
         contentPager.notifyDataSetChanged();
+        viewPager.setCurrentItem(1);
         Global.notifyTheme();
     }
 
@@ -131,6 +132,11 @@ public class MainActivity extends FragmentActivity implements Global.Adapter
     @Override
     public void OnUserChanged(User user) {
         contentPager.notifyDataSetChanged();
+    }
+
+    @Override
+    public void OnStatusChanged(String status) {
+
     }
 }
 

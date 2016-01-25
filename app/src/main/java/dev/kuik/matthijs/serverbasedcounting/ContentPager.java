@@ -16,11 +16,11 @@ public class ContentPager extends FragmentPagerAdapter {
     public ContentPager(FragmentManager fm) {
         super(fm);
         content = new ArrayList<>();
+        content.add(new Page("Handleiding", new InstructionsFragment()));
         content.add(new Page("Servers", new ServerDetectorFragment()));
         content.add(new Page("Teller", new CounterFragment()));
         content.add(new Page("Settings", new PrefsFragment()));
         content.add(new Page("Admin", new UserRightsFragment()));
-        content.add(new Page("Handleiding", new InstructionsFragment()));
     }
 
     class Page {
@@ -34,7 +34,7 @@ public class ContentPager extends FragmentPagerAdapter {
 
     @Override
     public Fragment getItem(int i) {
-        return i < ADMIN_INDEX || isAdmin() ? content.get(i).fragment : content.get(i + 1).fragment;
+        return content.get(i).fragment;
     }
 
     private boolean isAdmin() {
@@ -48,6 +48,6 @@ public class ContentPager extends FragmentPagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int i) {
-        return i < ADMIN_INDEX || isAdmin() ? content.get(i).title : content.get(i + 1).title;
+        return content.get(i).title;
     }
 }
