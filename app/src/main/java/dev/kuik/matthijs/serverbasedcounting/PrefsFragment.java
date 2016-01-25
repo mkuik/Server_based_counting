@@ -88,39 +88,6 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
         Global.removeListener(this);
     }
 
-    public static boolean validIP(final String ip) {
-        try {
-            if ( ip == null || ip.compareTo("") == 0 ) {
-                return false;
-            }
-
-            String[] parts = ip.split( "\\." );
-            if ( parts.length != 4 ) {
-                return false;
-            }
-
-            for ( String s : parts ) {
-                int i = Integer.parseInt( s );
-                if ( (i < 0) || (i > 255) ) {
-                    return false;
-                }
-            }
-            if ( ip.endsWith(".") ) {
-                return false;
-            }
-
-            return true;
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-    }
-
-
-
-    public static boolean validPort(final int port) {
-        return port >= 0 && port <= 65535;
-    }
-
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (view == ip) {
@@ -149,7 +116,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             public void onClick(DialogInterface dialog, int id) {
                 final String text = ipField.getText().toString();
                 Log.i(tag, "from ip dialog: " + text);
-                if (validIP(text)) {
+                if (ServerAddress.validIP(text)) {
                     ServerAddress address = new ServerAddress(text, Global.getHost().port, "");
                     Global.setHost(address);
                     Global.syncTheme();
@@ -157,11 +124,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
                 }
             }
         });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User cancelled the dialog
-            }
-        });
+        builder.setNegativeButton(android.R.string.cancel, null);
         // Create the AlertDialog object and return it
         builder.create();
         builder.show();
@@ -178,7 +141,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
             public void onClick(DialogInterface dialog, int id) {
                 final int port = Integer.valueOf(inputField.getText().toString());
                 Log.i(tag, "from port dialog: " + port);
-                if (validPort(port)) {
+                if (ServerAddress.validPort(port)) {
                     ServerAddress address = new ServerAddress(Global.getHost().ip, port, "");
                     Global.setHost(address);
                     Global.syncTheme();
@@ -186,12 +149,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
                 }
             }
         });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User cancelled the dialog
-            }
-        });
-        // Create the AlertDialog object and return it
+        builder.setNegativeButton(android.R.string.cancel, null);
         builder.create();
         builder.show();
     }
@@ -231,12 +189,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
                 Global.setDetector_timeout(timeout);
             }
         });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User cancelled the dialog
-            }
-        });
-        // Create the AlertDialog object and return it
+        builder.setNegativeButton(android.R.string.cancel, null);
         builder.create();
         builder.show();
     }
@@ -254,12 +207,7 @@ public class PrefsFragment extends Fragment implements AdapterView.OnItemClickLi
                 Global.getAdmin(text);
             }
         });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User cancelled the dialog
-            }
-        });
-        // Create the AlertDialog object and return it
+        builder.setNegativeButton(android.R.string.cancel, null);
         builder.create();
         builder.show();
     }

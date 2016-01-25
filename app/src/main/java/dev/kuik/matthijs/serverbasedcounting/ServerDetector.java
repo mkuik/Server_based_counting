@@ -35,10 +35,12 @@ public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
     final int timeout = 300;
     final int[] ip_range = {0, 255};
     final int port = 4500;
+    String external;
 
     public ServerDetector(Context context) {
         final int ip = ServerAddress.getIP(context);
         baseIP = String.format("%d.%d.%d.", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff));
+        external = context.getString(R.string.teller_openweek_ip);
     }
 
     public void testAddress(final String ip, final int port) {
@@ -73,6 +75,13 @@ public class ServerDetector extends AsyncTask<Void, ServerAddress, Void> {
             executor.submit(new Runnable() {
                 @Override
                 public void run() {testAddress(Global.getHost().ip, port);
+                }
+            });
+        }
+        if (external != null) {
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {testAddress(external, port);
                 }
             });
         }

@@ -102,4 +102,40 @@ public class ServerAddress {
         final WifiManager wifiMgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         return wifiMgr.getConnectionInfo().getIpAddress();
     }
+
+    public static String getIPString(Context context) {
+        final int ip = getIP(context);
+        return String.format("%d.%d.%d.%d", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 32 & 0xff));
+    }
+
+    public static boolean validIP(final String ip) {
+        try {
+            if ( ip == null || ip.compareTo("") == 0 ) {
+                return false;
+            }
+
+            String[] parts = ip.split( "\\." );
+            if ( parts.length != 4 ) {
+                return false;
+            }
+
+            for ( String s : parts ) {
+                int i = Integer.parseInt( s );
+                if ( (i < 0) || (i > 255) ) {
+                    return false;
+                }
+            }
+            if ( ip.endsWith(".") ) {
+                return false;
+            }
+
+            return true;
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+    }
+
+    public static boolean validPort(final int port) {
+        return port >= 0 && port <= 65535;
+    }
 }

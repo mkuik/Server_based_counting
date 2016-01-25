@@ -19,4 +19,15 @@
     <string name="count_preference_subtitle">Override the count variable</string>
     <string name="max_preference_title">Max</string>
     <string name="max_preference_subtitle">Override the max variable</string>
+
+    <string name="sendfeedback_button">Send feedback</string>
+    <string name="developers_button">Developers</string>
+    <string-array name="developers">
+        <item>Matthijs Kuik</item>
+        <item>Mohammed Charrout</item>
+        <item>Rick de Graaf</item>
+        <item>Samuel van Apeldoorn</item>
+    </string-array>
+
+    <string name="teller_openweek_ip">85.144.65.242</string>
 </resources>
