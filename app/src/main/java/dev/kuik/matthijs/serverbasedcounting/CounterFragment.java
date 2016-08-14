@@ -23,6 +23,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     private ThemeButton incrementButton;
     private ThemeButton decrementButton;
     private SwipeRefreshLayout swipeLayout;
+    private Integer submit_value = 0;
 
     public CounterFragment() {
         // Required empty public constructor
@@ -36,42 +37,51 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     public void increment() {
-        Global.submit_value++;
+        submit_value++;
         setCounterVariables();
         checkCounterRange();
     }
 
     public void decrement() {
-        Global.submit_value--;
+        submit_value--;
         setCounterVariables();
         checkCounterRange();
     }
 
     public void submit() {
-        Global.submit_buffer_value += Global.submit_value;
-        Global.counter_value += Global.submit_value;
-        Global.submit_value = 0;
-        setCounterVariables();
-        checkCounterRange();
-        Global.syncCounter();
+        new Com.Edit(submit_value) {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                submit_value = 0;
+                setCounterVariables();
+            }
+
+            @Override
+            protected void onStatus(int count, int max) {
+                super.onStatus(count, max);
+                Global.getHost().setCounter(count);
+                Global.getHost().setMax(max);
+                setCounterVariables();
+                checkCounterRange();
+            }
+        }.execute();
     }
 
     public void setCounterVariables() {
-        if (counter != null) counter.setText(Global.counter_value.toString());
+        if (counter != null) counter.setText(Global.getCounterValue().toString());
         if (subtotal != null) subtotal.setText(
-                (Global.submit_value < 0 ? "" : "+") + Global.submit_value.toString());
+                (submit_value < 0 ? "" : "+") + submit_value.toString());
     }
 
     public void checkCounterRange() {
-        final int sum = Global.counter_value + Global.submit_value;
+        final int sum = Global.getCounterValue() + submit_value;
         if (decrementButton != null) decrementButton.setEnabled(sum > 0);
         if (incrementButton != null) incrementButton.setEnabled(sum < Integer.MAX_VALUE);
-        if (submitButton != null) submitButton.setEnabled(Global.submit_value != 0);
-        if (sum > Global.counter_max_value && Global.counter_max_value != 0) {
-            message.setBackgroundColor(getActivity().getResources().getColor(R.color.server_error));
-            message.setText("Counter limit reached");
+        if (submitButton != null) submitButton.setEnabled(submit_value != 0);
+        if (sum > Global.getCounterMaxValue() && Global.getCounterMaxValue() != 0) {
+            message.setText("Limit reached");
         } else {
-            message.setBackgroundColor(Color.TRANSPARENT);
             message.setText("");
         }
     }
@@ -126,7 +136,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
             counter.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    Global.overrideCounter(getActivity());
+//                    Global.overrideCounter(getActivity());
                     return true;
                 }
             });
@@ -144,8 +154,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     @Override
     public void onRefresh() {
-        setRefreshing(true);
-        Global.syncCounter();
+//        setRefreshing(true);
     }
 
     public void setRefreshing(final boolean refreshing) {
@@ -160,17 +169,7 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     @Override
-    public void OnHostAddressChanged(ServerAddress address) {
-        onRefresh();
-    }
-
-    @Override
-    public void OnHostResponseRecieved(ServerAddress address, String response) {
-
-    }
-
-    @Override
-    public void OnHostResponseLost(ServerAddress address, String response) {
+    public void OnHostAddressChanged(Counter address) {
 
     }
 
@@ -182,23 +181,12 @@ public class CounterFragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void OnCounterValueChanged(int counter, int max) {
         setRefreshing(false);
-        Global.setSubmitBufferValue(0);
         setCounterVariables();
         checkCounterRange();
     }
 
     @Override
-    public void OnUserListRecieved(List<User> users) {
-
-    }
-
-    @Override
     public void OnUserChanged(User user) {
 
-    }
-
-    @Override
-    public void OnStatusChanged(String status) {
-        message.setText(status);
     }
 }

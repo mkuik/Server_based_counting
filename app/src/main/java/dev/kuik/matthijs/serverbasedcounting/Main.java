@@ -1,9 +1,6 @@
 package dev.kuik.matthijs.serverbasedcounting;
 
-import android.animation.Animator;
 import android.app.ActivityManager;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -13,38 +10,20 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.PagerTitleStrip;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.util.Pair;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.ImageView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.List;
-
-public class MainActivity extends FragmentActivity implements Global.Adapter, Com.Adapter
+public class Main extends FragmentActivity implements Global.Adapter, Com.Adapter
 {
-    ContentPager contentPager;
-    ViewPager viewPager;
-    ImageView iconImageView;
-    PagerTitleStrip title_strip;
     ThemeBackground theme;
+    ServerDetectorFragment detector;
+    CounterFragment counter;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        contentPager = new ContentPager(getSupportFragmentManager());
-        viewPager = (ViewPager) findViewById(R.id.pager);
-        iconImageView = (ImageView) findViewById(R.id.logo);
-        title_strip = (PagerTitleStrip) findViewById(R.id.pager_title_strip);
+        setContentView(R.layout.main);
         theme = (ThemeBackground) findViewById(R.id.theme_background);
-        viewPager.setAdapter(contentPager);
-
         Global.getPrefrences(this);
-        contentPager.notifyDataSetChanged();
-        viewPager.setCurrentItem(1);
     }
 
     @Override
@@ -67,24 +46,24 @@ public class MainActivity extends FragmentActivity implements Global.Adapter, Co
     public void onWindowFocusChanged (boolean hasFocus){
         super.onWindowFocusChanged(hasFocus);
         if(hasFocus){
-            setRippleOrigin();
+//            setRippleOrigin();
         }
     }
 
-    public void setRippleOrigin() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-            final int x = (iconImageView.getLeft() + iconImageView.getRight()) / 2;
-            final int y = (iconImageView.getTop() + iconImageView.getBottom()) / 2;
+    public void setRippleOrigin(View v) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            final int x = (v.getLeft() + v.getRight()) / 2;
+            final int y = (v.getTop() + v.getBottom()) / 2;
             theme.setCenter(new Point(x, y));
-            Log.i("center", String.format("%d %d %d %d : %d %d", iconImageView.getTop(),
-                    iconImageView.getBottom(), iconImageView.getLeft(), iconImageView.getRight(),
+            Log.i("center", String.format("%d %d %d %d : %d %d", v.getTop(),
+                    v.getBottom(), v.getLeft(), v.getRight(),
                     x, y));
         }
     }
 
     public void setTheme(final Bitmap icon, final int color1, final int color2) {
         theme.setForegroundColor(color1);
-        iconImageView.setImageBitmap(icon);
+//        iconImageView.setImageBitmap(icon);
         theme.activate();
         setThemeColor(color1, color2);
     }
@@ -95,19 +74,19 @@ public class MainActivity extends FragmentActivity implements Global.Adapter, Co
             getWindow().setNavigationBarColor(color1);
             getWindow().setStatusBarColor(color1);
         }
-        title_strip.setTextColor(color2);
+//        title_strip.setTextColor(color2);
         theme.setAccentColor(color2);
     }
 
     @Override
     public void OnHostAddressChanged(Counter address) {
-        Global.setPrefrences(this);
+
     }
 
     @Override
     public void comFailed() {
         if (theme.isActive()) {
-            iconImageView.setImageBitmap(null);
+//            iconImageView.setImageBitmap(null);
             setThemeColor(Color.BLACK, Color.WHITE);
             theme.deactivate();
         }
@@ -136,7 +115,7 @@ public class MainActivity extends FragmentActivity implements Global.Adapter, Co
 
     @Override
     public void OnUserChanged(User user) {
-        contentPager.notifyDataSetChanged();
+//        contentPager.notifyDataSetChanged();
     }
 
 }

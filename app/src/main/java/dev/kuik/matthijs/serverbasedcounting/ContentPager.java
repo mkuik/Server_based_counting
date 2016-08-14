@@ -11,16 +11,12 @@ import java.util.List;
 // and NOT a FragmentPagerAdapter.
 public class ContentPager extends FragmentPagerAdapter {
     private List<Page> content;
-    private final int ADMIN_INDEX = 3;
 
     public ContentPager(FragmentManager fm) {
         super(fm);
         content = new ArrayList<>();
-        content.add(new Page("Handleiding", new InstructionsFragment()));
         content.add(new Page("Servers", new ServerDetectorFragment()));
         content.add(new Page("Teller", new CounterFragment()));
-        content.add(new Page("Settings", new PrefsFragment()));
-        content.add(new Page("Admin", new UserRightsFragment()));
     }
 
     class Page {
@@ -37,13 +33,9 @@ public class ContentPager extends FragmentPagerAdapter {
         return content.get(i).fragment;
     }
 
-    private boolean isAdmin() {
-        return Global.getUser() != null && Global.getUser().isAdmīn();
-    }
-
     @Override
     public int getCount() {
-        return isAdmin() ? content.size() : content.size() - 1;
+        return content.size();
     }
 
     @Override

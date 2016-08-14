@@ -16,44 +16,35 @@ import java.util.List;
 public class User {
 
     String name;
-    Integer id;
+    int id;
     boolean edit_rights = false;
     boolean admin_rights = false;
 
-    User( final String name ) {
-        this.name = name;
-    }
-
-    User( final String name, final Integer id ) {
+    User( final String name, final int id ) {
         this.name = name;
         this.id = id;
     }
 
-    User( final JSONObject json ) throws JSONException {
-        id = json.getInt("id");
-        name = json.getString("name");
-        edit_rights = json.getBoolean("edit");
-        admin_rights = json.getBoolean("admin");
+    User(final JSONObject json ) throws JSONException {
+        this( json.getString("NAME"), json.getInt("ID") );
     }
 
-    User( Context context ) {
-        this.name = getUsername(context);
+    User( Context context) {
+        this( getUsername(context), -1 );
     }
 
-    public JSONObject toJSON() throws JSONException {
+    JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
-        if (id != null) json.put("id", id);
-        json.put("name", name);
-        json.put("edit", isEditor());
-        json.put("admin", isAdmīn());
+        json.put("NAME", name);
+        json.put("ID", id);
+        json.put("EDIT", edit_rights);
+        json.put("ADMIN", admin_rights);
         return json;
     }
 
     public int getID() {
         return id;
     }
-
-    public void setID(final Integer id ) { this.id = id; }
 
     public String getName() { return name; }
 
@@ -72,7 +63,6 @@ public class User {
     public void setAdminRights(boolean admin_rights) {
         this.admin_rights = admin_rights;
     }
-
 
     public static String getUsername(Context context) {
         AccountManager manager = AccountManager.get(context);

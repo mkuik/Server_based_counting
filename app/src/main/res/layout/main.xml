@@ -19,27 +19,20 @@
         android:fitsSystemWindows="true"
         android:gravity="center_horizontal">
 
-        <ImageView
-            android:id="@+id/logo"
+        <fragment
             android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:focusableInTouchMode="false"
-            android:scaleType="fitCenter"
-            android:layout_marginTop="@dimen/icon_statusbar_distance"
-            android:layout_marginBottom="5dp"/>
+            android:layout_height="120dp"
+            android:name="dev.kuik.matthijs.serverbasedcounting.ServerDetectorFragment"
+            android:id="@+id/servers"
+            tools:layout="@layout/fragment_select_server" />
 
-        <android.support.v4.view.ViewPager
-            android:id="@+id/pager"
+        <fragment
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <android.support.v4.view.PagerTitleStrip
-                android:id="@+id/pager_title_strip"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/pege_title_strip_height"
-                style="@style/viepagertitlestrip"/>
-
-        </android.support.v4.view.ViewPager>
+            android:layout_height="match_parent"
+            android:name="dev.kuik.matthijs.serverbasedcounting.CounterFragment"
+            android:id="@+id/counter"
+            tools:layout="@layout/fragment_counter"
+            android:layout_weight="1" />
 
     </LinearLayout>
 
